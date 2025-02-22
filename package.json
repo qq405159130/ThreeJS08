@@ -25,5 +25,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.7.3",
     "vite": "^6.1.1"
-  }
+  },
+  "repository": "https://github.com/qq405159130/ThreeJS07.git",
+  "author": "hewenbin <405159130@qq.com>"
 }
