@@ -1,0 +1,21 @@
+# 排除 node_modules 目录
+node_modules/
+
+# 排除编译输出目录
+dist/
+build/
+
+# 排除本地环境配置文件
+.env
+
+# 排除日志文件
+*.log
+
+# 排除 IDE 配置文件
+.vscode/
+.idea/
+
+# 排除操作系统生成的文件
+.DS_Store
+Thumbs.db
+.vercel
