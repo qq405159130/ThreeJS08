@@ -20,7 +20,9 @@ export class MyCameraControls {
 
     // 移动速度
     private velocity: THREE.Vector3 = new THREE.Vector3();
-    private moveSpeed: number = 1;
+    private targetVelocity: THREE.Vector3 = new THREE.Vector3(); // 目标速度
+    private moveSpeed: number = 5; // 移动速度
+    private smoothFactor: number = 0.1; // 平滑因子
 
     constructor(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
         this.camera = camera;
@@ -52,6 +54,12 @@ export class MyCameraControls {
                 this.enablePointerLock();
             }
         });
+
+        // 确保在页面加载后立即监听点击事件
+        window.addEventListener('load', () => {
+            this.renderer.domElement.removeEventListener('click', this.onRenderClick.bind(this));
+            this.renderer.domElement.addEventListener('click', this.onRenderClick.bind(this));
+        });
     }
 
     private onPointerLockChange() {
@@ -64,6 +72,16 @@ export class MyCameraControls {
             this.moveRight = false;
             this.moveUp = false;
             this.moveDown = false;
+
+            // 重新启用点击事件监听
+            this.renderer.domElement.removeEventListener('click', this.onRenderClick.bind(this));
+            this.renderer.domElement.addEventListener('click', this.onRenderClick.bind(this));
+        }
+    }
+
+    private onRenderClick() {
+        if (!this.isPointerLocked) {
+            this.enablePointerLock();
         }
     }
 
@@ -126,19 +144,31 @@ export class MyCameraControls {
             // 如果启用了PointerLockControls，则禁用OrbitControls
             this.orbitControls.enabled = false;
 
-            // 根据键盘状态更新摄像机位置
-            this.velocity.set(0, 0, 0);
+            // 根据键盘状态更新目标速度
+            this.targetVelocity.set(0, 0, 0);
 
-            if (this.moveForward) this.velocity.z -= this.moveSpeed * deltaTime;
-            if (this.moveBackward) this.velocity.z += this.moveSpeed * deltaTime;
-            if (this.moveLeft) this.velocity.x -= this.moveSpeed * deltaTime;
-            if (this.moveRight) this.velocity.x += this.moveSpeed * deltaTime;
-            if (this.moveUp) this.velocity.y += this.moveSpeed * deltaTime;
-            if (this.moveDown) this.velocity.y -= this.moveSpeed * deltaTime;
+            if (this.moveForward) this.targetVelocity.z += this.moveSpeed * deltaTime;
+            if (this.moveBackward) this.targetVelocity.z -= this.moveSpeed * deltaTime;
+            if (this.moveLeft) this.targetVelocity.x += this.moveSpeed * deltaTime;
+            if (this.moveRight) this.targetVelocity.x -= this.moveSpeed * deltaTime;
+            if (this.moveUp) this.targetVelocity.y += this.moveSpeed * deltaTime;
+            if (this.moveDown) this.targetVelocity.y -= this.moveSpeed * deltaTime;
+
+            // 平滑速度
+            this.velocity.lerp(this.targetVelocity, this.smoothFactor);
+
+            // 将速度向量转换为摄像机本地坐标系
+            const direction = new THREE.Vector3();
+            this.camera.getWorldDirection(direction);
+            direction.y = 0; // 保持水平移动
+            direction.normalize();
+
+            const right = new THREE.Vector3();
+            right.crossVectors(this.camera.up, direction).normalize();
 
             // 更新摄像机位置
-            this.pointerLockControls.moveForward(-this.velocity.z);
-            this.pointerLockControls.moveRight(-this.velocity.x);
+            this.camera.position.add(direction.multiplyScalar(this.velocity.z));
+            this.camera.position.add(right.multiplyScalar(this.velocity.x));
             this.camera.position.y += this.velocity.y;
         } else {
             // 否则启用OrbitControls
