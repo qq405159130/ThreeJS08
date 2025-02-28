@@ -1,5 +1,5 @@
 import { defineConfig, loadEnv } from 'vite';
-// import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
@@ -12,23 +12,23 @@ export default defineConfig(({ mode }) => {
     return {
         root: '.', // 设置根目录为项目根目录
         build: {
-            outDir: 'dist', // 打包输出目录
-            emptyOutDir: true, // 清空输出目录
-            rollupOptions: {
-                input: {
-                    main: path.resolve(__dirname, 'index.html'), //主入口文件， 使用绝对路径指向 index.html
-                },
+          outDir: 'dist', // 打包输出目录
+          emptyOutDir: true, // 清空输出目录
+          rollupOptions: {
+            input: {
+              main: path.resolve(__dirname, 'index.html'), //主入口文件， 使用绝对路径指向 index.html
             },
+          },
         },
-        // plugins: enableReact ? [react()] : [], // 动态启用React插件
+        plugins: enableReact ? [react()] : [], // 动态启用React插件
         define: {
-            // 将环境变量注入到代码中
-            'import.meta.env.VITE_ENABLE_REACT': JSON.stringify(env.VITE_ENABLE_REACT),
+          // 将环境变量注入到代码中
+          'import.meta.env.VITE_ENABLE_REACT': JSON.stringify(env.VITE_ENABLE_REACT),
         },
         resolve: {
-            alias: {
-                "@": path.resolve(__dirname, "./src"), // 配置 @ 指向 src 目录
-            },
+          alias: {
+            "@": path.resolve(__dirname, "./src"), // 配置 @ 指向 src 目录
+          },
         },
-    };
-});
+      };
+    });

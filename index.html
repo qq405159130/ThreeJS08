@@ -3,10 +3,109 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Three.js Project</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <title>Three.js with TypeScript</title>
+    <!-- <link rel="stylesheet" href="/styles.css" /> -->
+    <style>
+      /* 设置容器为全屏 */
+      html,
+      body,
+      #container {
+        top: 0;
+        left: 0;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      /* 设置Three.js画布为全屏 */
+      #app {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1; /* Three.js画布在底层 */
+        pointer-events: auto; /* 确保Three.js画布接收鼠标事件 */
+      }
+
+      /* 设置React UI为全屏，并叠加在Three.js画布上方 */
+      #root {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2; /* React UI在上层 */
+        pointer-events: none; /* 允许点击穿透到Three.js画布 */
+      }
+
+      /* 如果React UI中有需要交互的元素，可以单独启用指针事件 */
+      .interactive {
+        pointer-events: auto;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
   </head>
+
   <body>
-    <script type="module" src="./src/main.ts"></script>
+    <!-- 容器 -->
+    <div id="container">
+      <!-- Three.js挂载点 -->
+      <div id="app"></div>
+      <!-- React挂载点 -->
+      <div id="root"></div>
+    </div>
+
+    <!-- 引入React入口文件 -->
+    <script type="module">
+      const enableReact = import.meta.env.VITE_ENABLE_REACT === 'true';
+      if (enableReact) {
+        import('./src/react-app/main.tsx'); // 确保路径正确
+      }
+    </script>
+    <!-- 引入Three.js入口文件 -->
+    <!-- <script type="module" src="/src/main.ts"></script> -->
+
+    <!-- <div
+      id="start-message"
+      style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        color: white;
+        z-index: 9;
+      "
+    >
+      Click to start the game
+    </div> -->
+    <div
+      id="pointer-lock-message"
+      style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 44px;
+        color: rgb(248, 248, 248);
+        display: none;
+        background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+        user-select: none; /* 禁止文字选择 */
+        pointer-events: none; /* 允许点击事件 */
+        cursor: pointer; /* 显示手型光标 */
+        z-index: 9;
+      "
+    >
+      Click to enable pointer lock
+    </div>
+    
   </body>
 </html>
