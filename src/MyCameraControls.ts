@@ -1,4 +1,3 @@
-
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
@@ -10,6 +9,18 @@ export class MyCameraControls {
     private pointerLockControls: PointerLockControls;
     private orbitControls: OrbitControls;
     private isPointerLocked: boolean = false;
+
+    // 键盘状态
+    private moveForward: boolean = false;
+    private moveBackward: boolean = false;
+    private moveLeft: boolean = false;
+    private moveRight: boolean = false;
+    private moveUp: boolean = false;
+    private moveDown: boolean = false;
+
+    // 移动速度
+    private velocity: THREE.Vector3 = new THREE.Vector3();
+    private moveSpeed: number = 1;
 
     constructor(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
         this.camera = camera;
@@ -34,34 +45,72 @@ export class MyCameraControls {
         // 监听键盘事件
         document.addEventListener('keydown', this.onKeyDown.bind(this), false);
         document.addEventListener('keyup', this.onKeyUp.bind(this), false);
+
+        // 点击画布时启用PointerLockControls
+        this.renderer.domElement.addEventListener('click', () => {
+            if (!this.isPointerLocked) {
+                this.enablePointerLock();
+            }
+        });
     }
 
     private onPointerLockChange() {
         this.isPointerLocked = document.pointerLockElement === this.renderer.domElement;
+        if (!this.isPointerLocked) {
+            // 退出PointerLock时重置键盘状态
+            this.moveForward = false;
+            this.moveBackward = false;
+            this.moveLeft = false;
+            this.moveRight = false;
+            this.moveUp = false;
+            this.moveDown = false;
+        }
     }
 
     private onKeyDown(event: KeyboardEvent) {
-        console.warn(`Key down: ${event.code}   ${this.isPointerLocked}`);
-        if (this.isPointerLocked) {
-            switch (event.code) {
-                case 'KeyW': // 向前移动
-                    this.pointerLockControls.moveForward(0.1);
-                    break;
-                case 'KeyS': // 向后移动
-                    this.pointerLockControls.moveForward(-0.1);
-                    break;
-                case 'KeyA': // 向左移动
-                    this.pointerLockControls.moveRight(-0.1);
-                    break;
-                case 'KeyD': // 向右移动
-                    this.pointerLockControls.moveRight(0.1);
-                    break;
-            }
+        switch (event.code) {
+            case 'KeyW': // 向前移动
+                this.moveForward = true;
+                break;
+            case 'KeyS': // 向后移动
+                this.moveBackward = true;
+                break;
+            case 'KeyA': // 向左移动
+                this.moveLeft = true;
+                break;
+            case 'KeyD': // 向右移动
+                this.moveRight = true;
+                break;
+            case 'KeyR': // 上升
+                this.moveUp = true;
+                break;
+            case 'KeyF': // 下降
+                this.moveDown = true;
+                break;
         }
     }
 
     private onKeyUp(event: KeyboardEvent) {
-        // 可以在这里处理按键释放的逻辑
+        switch (event.code) {
+            case 'KeyW':
+                this.moveForward = false;
+                break;
+            case 'KeyS':
+                this.moveBackward = false;
+                break;
+            case 'KeyA':
+                this.moveLeft = false;
+                break;
+            case 'KeyD':
+                this.moveRight = false;
+                break;
+            case 'KeyR':
+                this.moveUp = false;
+                break;
+            case 'KeyF':
+                this.moveDown = false;
+                break;
+        }
     }
 
     public enablePointerLock() {
@@ -72,10 +121,25 @@ export class MyCameraControls {
         this.pointerLockControls.unlock();
     }
 
-    public update() {
+    public update(deltaTime: number) {
         if (this.isPointerLocked) {
             // 如果启用了PointerLockControls，则禁用OrbitControls
             this.orbitControls.enabled = false;
+
+            // 根据键盘状态更新摄像机位置
+            this.velocity.set(0, 0, 0);
+
+            if (this.moveForward) this.velocity.z -= this.moveSpeed * deltaTime;
+            if (this.moveBackward) this.velocity.z += this.moveSpeed * deltaTime;
+            if (this.moveLeft) this.velocity.x -= this.moveSpeed * deltaTime;
+            if (this.moveRight) this.velocity.x += this.moveSpeed * deltaTime;
+            if (this.moveUp) this.velocity.y += this.moveSpeed * deltaTime;
+            if (this.moveDown) this.velocity.y -= this.moveSpeed * deltaTime;
+
+            // 更新摄像机位置
+            this.pointerLockControls.moveForward(-this.velocity.z);
+            this.pointerLockControls.moveRight(-this.velocity.x);
+            this.camera.position.y += this.velocity.y;
         } else {
             // 否则启用OrbitControls
             this.orbitControls.enabled = true;

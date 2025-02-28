@@ -24,10 +24,6 @@ scene.add(cube);
 
 // 初始化摄像机控制
 const cameraControls = new MyCameraControls(camera, renderer, scene);
-// 点击画布时启用PointerLockControls
-renderer.domElement.addEventListener('click', () => {
-    cameraControls.enablePointerLock();
-});
 
 const clock = new THREE.Clock();
 
@@ -120,8 +116,7 @@ function animate() {
     createTempCubes(scene, geometry, material);
 
     const deltaTime = clock.getDelta();
-    
-    cameraControls.update();// 更新摄像机控制
+    cameraControls.update(deltaTime);// 更新摄像机控制
 
     stats.end();
 }
