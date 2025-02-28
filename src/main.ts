@@ -1,5 +1,10 @@
 import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module';
+import { MyCameraControls } from './MyCameraControls';
+
+
+
+
 
 const stats = new Stats();
 document.body.appendChild(stats.dom);
@@ -16,6 +21,13 @@ const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
+
+// 初始化摄像机控制
+const cameraControls = new MyCameraControls(camera, renderer, scene);
+// 点击画布时启用PointerLockControls
+renderer.domElement.addEventListener('click', () => {
+    cameraControls.enablePointerLock();
+});
 
 const clock = new THREE.Clock();
 
@@ -51,6 +63,53 @@ function createTempCubes(scene: THREE.Scene, geometry: THREE.BoxGeometry, materi
     });
 }
 
+function debugHelpers(scene: THREE.Scene) {
+    //使用AxesHelper辅助工具
+    const axesHelper = new THREE.AxesHelper(5);
+    scene.add(axesHelper);
+    //使用GridHelper辅助工具
+    const gridHelper = new THREE.GridHelper(10, 10);
+    scene.add(gridHelper);
+    //使用ArrowHelper辅助工具
+    const arrowHelper = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 2, 0xffff00);
+    scene.add(arrowHelper);
+    //使用CameraHelper辅助工具
+    const cameraHelper = new THREE.CameraHelper(camera);
+    scene.add(cameraHelper);
+    //使用PointLightHelper辅助工具
+    const pointLightHelper = new THREE.PointLightHelper(new THREE.PointLight(0xffffff, 1, 100));
+    scene.add(pointLightHelper);
+    //使用DirectionalLightHelper辅助工具
+    const directionalLightHelper = new THREE.DirectionalLightHelper(new THREE.DirectionalLight(0xffffff, 1));
+    scene.add(directionalLightHelper);
+    //使用SpotLightHelper辅助工具
+    const spotLightHelper = new THREE.SpotLightHelper(new THREE.SpotLight(0xffffff, 1));
+    scene.add(spotLightHelper);
+    //使用HemisphereLightHelper辅助工具
+    const hemisphereLightHelper = new THREE.HemisphereLightHelper(new THREE.HemisphereLight(0xffffff, 1, 10), 5);
+    scene.add(hemisphereLightHelper);
+    // //使用SkeletonHelper辅助工具 (报错，先注释了)
+    // const skinnedMesh = new THREE.SkinnedMesh(geometry, material);
+    // const skeletonHelper = new THREE.SkeletonHelper(skinnedMesh);
+    // scene.add(skinnedMesh);
+    // scene.add(skeletonHelper);
+    //使用EdgesHelper辅助工具
+    const edges = new THREE.EdgesGeometry(cube.geometry);
+    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x00ff00 }));
+    scene.add(line);
+    //使用WireframeHelper辅助工具
+    const wireframe = new THREE.WireframeGeometry(cube.geometry);
+    const wireframeLine = new THREE.LineSegments(wireframe, new THREE.LineBasicMaterial({ color: 0x00ff00 }));
+    scene.add(wireframeLine);
+    //使用BoxHelper辅助工具
+    const boxHelper = new THREE.BoxHelper(cube, 0x00ff00);
+    scene.add(boxHelper);
+    //使用PlaneHelper辅助工具
+    const planeHelper = new THREE.PlaneHelper(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), 10, 0x00ff00);
+    scene.add(planeHelper);
+}
+debugHelpers(scene);
+
 function animate() {
     stats.begin();
     requestAnimationFrame(animate);
@@ -61,10 +120,11 @@ function animate() {
     createTempCubes(scene, geometry, material);
 
     const deltaTime = clock.getDelta();
+    
+    cameraControls.update();// 更新摄像机控制
 
     stats.end();
 }
-
 animate();
 
 // 处理窗口大小变化
@@ -75,31 +135,7 @@ function handleResize() {
     renderer.setSize(width, height);
     // 强制渲染
     renderer.render(scene, camera);
-    
-}
 
-function test(){
-    //three的点
-    const point = new THREE.Vector3(1, 2, 3);
-    //three的射线
-    const ray = new THREE.Raycaster();
-    //three的鼠标
-    const mouse = new THREE.Vector2();
-    //three的平面
-    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-    //three的交点
-    const intersection = new THREE.Vector3();
-    //three的矩阵
-    const matrix = new THREE.Matrix4();
-    //three的四元数
-    const quaternion = new THREE.Quaternion();
-    //three的欧拉角
-    const euler = new THREE.Euler();
-    //three的颜色
-    const color = new THREE.Color(0xff0000);
-    //three的线
-    const line = new THREE.Line();  
-    
 }
 
 // 监听窗口大小变化
