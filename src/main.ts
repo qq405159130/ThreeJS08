@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module';
-import React from 'react';
-import ReactDOM from 'react-dom/client';
 
 const stats = new Stats();
 document.body.appendChild(stats.dom);
@@ -101,6 +99,7 @@ function test(){
     const color = new THREE.Color(0xff0000);
     //three的线
     const line = new THREE.Line();  
+    
 }
 
 // 监听窗口大小变化

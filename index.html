@@ -62,7 +62,8 @@
       <!-- React挂载点 -->
       <div id="root"></div>
     </div>
-
+    <!-- 引入Three.js入口文件 -->
+    <script type="module" src="/src/main.ts"></script>
     <!-- 引入React入口文件 -->
     <script type="module">
       const enableReact = import.meta.env.VITE_ENABLE_REACT === 'true';
@@ -70,8 +71,6 @@
         import('./src/react-app/main.tsx'); // 确保路径正确
       }
     </script>
-    <!-- 引入Three.js入口文件 -->
-    <!-- <script type="module" src="/src/main.ts"></script> -->
 
     <!-- <div
       id="start-message"

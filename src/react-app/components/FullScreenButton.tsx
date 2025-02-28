@@ -25,7 +25,7 @@ const FullScreenButton = () => {
   }, []);
 
   const enterFullScreen = () => {
-    const container = document.getElementById('container'); // 进入全屏的目标容器
+    const container = document.getElementById('container') as HTMLElement; // 进入全屏的目标容器
     if (container) {
       if (container.requestFullscreen) {
         container.requestFullscreen();
