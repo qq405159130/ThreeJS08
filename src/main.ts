@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { MyCameraControls } from './MyCameraControls';
+import { MapInfo } from './terrain/types';
+import { RenderTest } from './terrain/RenderTest';
 
 
 
@@ -105,6 +107,26 @@ function debugHelpers(scene: THREE.Scene) {
     scene.add(planeHelper);
 }
 debugHelpers(scene);
+
+
+// 地图生成参数
+const mapInfo: MapInfo = {
+    width: 50,
+    height: 50,
+    oceanRatio: 0.3,
+    mountainRatio: 0.15,
+    forestRatio: 0.2,
+    desertRatio: 0.1,
+    snowRatio: 0.1,
+    minCities: 5,
+    maxCities: 10
+};
+
+// 创建渲染测试实例
+const renderTest = new RenderTest(mapInfo, scene, camera, renderer);
+// 生成地图并渲染
+renderTest.generateAndRenderMap();
+
 
 function animate() {
     stats.begin();
