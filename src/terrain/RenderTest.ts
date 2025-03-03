@@ -28,7 +28,8 @@ export class RenderTest {
         const hexSize = 1; // 六边形大小
         const hexHeight = hexSize * Math.sqrt(3);
         const geometry = new THREE.CylinderGeometry(hexSize, hexSize, 1, 6);
-        const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+        // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
         mapData.forEach(cell => {
             const { q, r, terrainType } = cell;
             const color = this.getColorByTerrain(terrainType);

@@ -18,9 +18,13 @@ export class ThreejsSceneTest {
         // 初始化场景、相机、渲染器
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer();
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });//启用 WebGL 渲染器的抗锯齿，以提高渲染质量
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('app')?.appendChild(this.renderer.domElement);
+
+        const light = new THREE.DirectionalLight(0xffffff, 10);
+        light.position.set(1, 1, 1).normalize();
+        this.scene.add(light);
 
         // 设置相机位置
         this.camera.position.set(0, 20, 20);
@@ -49,6 +53,34 @@ export class ThreejsSceneTest {
 
         // 标记初始化完成
         this.isInitialized = true;
+    }
+
+    public animate(): void {
+        if (!this.isInitialized) return; // 如果未初始化完成，跳过渲染
+
+        this.stats.begin();
+
+        // 更新摄像机控制
+        const deltaTime = this.clock.getDelta();
+        this.cameraControls.update(deltaTime);
+
+        // 创建临时立方体
+        this.createTempCubes();
+
+        // 渲染场景
+        this.renderer.render(this.scene, this.camera);
+
+        this.stats.end();
+        requestAnimationFrame(() => this.animate());
+    }
+
+    public handleResize(): void {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(width, height);
+        this.renderer.render(this.scene, this.camera);
     }
 
     private debugHelpers(): void {
@@ -106,8 +138,8 @@ export class ThreejsSceneTest {
     private initMapRenderTest(): void {
         // 地图生成参数
         const mapInfo: MapInfo = {
-            width: 15,
-            height: 5,
+            width: 5,
+            height: 2,
             oceanRatio: 0.3,
             mountainRatio: 0.15,
             forestRatio: 0.2,
@@ -158,31 +190,4 @@ export class ThreejsSceneTest {
         scene.background = skyboxTexture;
     }
 
-    public animate(): void {
-        if (!this.isInitialized) return; // 如果未初始化完成，跳过渲染
-
-        this.stats.begin();
-
-        // 更新摄像机控制
-        const deltaTime = this.clock.getDelta();
-        this.cameraControls.update(deltaTime);
-
-        // 创建临时立方体
-        this.createTempCubes();
-
-        // 渲染场景
-        this.renderer.render(this.scene, this.camera);
-
-        this.stats.end();
-        requestAnimationFrame(() => this.animate());
-    }
-
-    public handleResize(): void {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(width, height);
-        this.renderer.render(this.scene, this.camera);
-    }
 }
