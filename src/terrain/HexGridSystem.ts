@@ -1,4 +1,3 @@
-// src/terrain/HexGridSystem.ts
 import * as THREE from 'three';
 import { HexCellView } from './HexCellView';
 import { EventManager } from '../utils/EventManager';
@@ -29,11 +28,11 @@ export class HexGridSystem {
         this.eventManager.on('cellHoverEnd', (cell: HexCellView) => this.handleCellHoverEnd(cell));
         this.eventManager.on('cellClick', (cell: HexCellView) => this.handleCellClick(cell));
 
-        // 绑定全局点击事件
-        this.renderer.domElement.addEventListener('click', () => this.handleGlobalClick());
-
         // 绑定鼠标移动事件
         this.renderer.domElement.addEventListener('mousemove', (event) => this.onMouseMove(event));
+
+        // 绑定鼠标点击事件
+        this.renderer.domElement.addEventListener('click', (event) => this.onMouseClick(event));
     }
 
     // 处理鼠标移动事件
@@ -59,6 +58,25 @@ export class HexGridSystem {
         } else if (this.hoveredCell) {
             this.hoveredCell.onHoverEnd(); // 结束悬停
             this.hoveredCell = null;
+        }
+    }
+
+    // 处理鼠标点击事件
+    private onMouseClick(event: MouseEvent): void {
+        // 将鼠标位置归一化为设备坐标（-1到+1）
+        this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // 更新光线投射器
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+
+        // 检测与网格的交互
+        const intersects = this.raycaster.intersectObjects(this.cells.map(cell => cell.mesh));
+        if (intersects.length > 0) {
+            const intersectedCell = this.cells.find(cell => cell.mesh === intersects[0].object);
+            if (intersectedCell) {
+                intersectedCell.onClick(); // 触发点击事件
+            }
         }
     }
 

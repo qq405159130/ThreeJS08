@@ -14,9 +14,6 @@ export class HexCellView {
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.position.set(q * 1.5, 0, r * Math.sqrt(3) - (q % 2) * (Math.sqrt(3) / 2));
         this.mesh.rotation.x = Math.PI / 2;
-
-        // 绑定点击事件
-        this.mesh.addEventListener('click', () => this.onClick());//Argument of type '"click"' is not assignable to parameter of type 'keyof Object3DEventMap'.ts(2345)
     }
 
     // 悬停事件
