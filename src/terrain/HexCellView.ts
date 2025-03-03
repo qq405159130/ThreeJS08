@@ -13,7 +13,7 @@ export class HexCellView {
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.position.set(q * 1.5, 0, r * Math.sqrt(3) - (q % 2) * (Math.sqrt(3) / 2));
-        this.mesh.rotation.x = Math.PI / 2;
+        // this.mesh.rotation.x = Math.PI / 2;
     }
 
     // 悬停事件

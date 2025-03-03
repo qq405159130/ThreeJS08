@@ -3,6 +3,8 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 import { MyCameraControls } from './MyCameraControls';
 import { MapInfo } from './terrain/types';
 import { RenderTest } from './terrain/RenderTest';
+import { MapRenderer } from './map/MapRenderer';
+import { MapGenerator } from './terrain/MapGenerator';
 
 export class ThreejsSceneTest {
     private scene: THREE.Scene;
@@ -13,6 +15,8 @@ export class ThreejsSceneTest {
     private clock: THREE.Clock;
     private tempCubes: Map<THREE.Mesh, number> = new Map();
     private isInitialized: boolean = false; // 初始化标志
+
+    private mapRenderer?: MapRenderer;
 
     constructor() {
         // 初始化场景、相机、渲染器
@@ -47,9 +51,11 @@ export class ThreejsSceneTest {
         this.debugHelpers();
 
         // 初始化地图渲染测试
-        this.initMapRenderTest();
+        // this.initMapRenderTest();
 
         this.createSky(this.scene);
+
+        this.initMapRender();
 
         // 标记初始化完成
         this.isInitialized = true;
@@ -70,9 +76,12 @@ export class ThreejsSceneTest {
         // 渲染场景
         this.renderer.render(this.scene, this.camera);
 
+        this.mapRenderer?.updateMap(); // 更新地图
+
         this.stats.end();
         requestAnimationFrame(() => this.animate());
     }
+
 
     public handleResize(): void {
         const width = window.innerWidth;
@@ -157,6 +166,32 @@ export class ThreejsSceneTest {
             console.error('Error during map generation:', error);
         });
     }
+
+
+    private initMapRender(): void {
+
+        // 地图生成参数
+        const mapInfo: MapInfo = {
+            width: 5,
+            height: 2,
+            oceanRatio: 0.3,
+            mountainRatio: 0.15,
+            forestRatio: 0.2,
+            desertRatio: 0.1,
+            snowRatio: 0.1,
+            minCities: 3,
+            maxCities: 6
+        };
+        // 初始化地图渲染器
+        this.mapRenderer = new MapRenderer(this.scene, this.camera, this.renderer);
+
+        // 生成地图并渲染
+        const mapGenerator = new MapGenerator(mapInfo);
+        mapGenerator.generateMap().then(mapData => {
+            this.mapRenderer?.renderMap(mapData);
+        });
+    }
+
 
     private createTempCubes(): void {
         const geometry = new THREE.BoxGeometry();
