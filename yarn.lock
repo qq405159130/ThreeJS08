@@ -917,6 +917,11 @@ hls.js@^1.5.17:
   resolved "https://registry.npmmirror.com/hls.js/-/hls.js-1.5.20.tgz#7eb23bb5e2595311d4e2761038ca6882673de7e2"
   integrity sha512-uu0VXUK52JhihhnN/MVVo1lvqNNuhoxkonqgO3IpjvQiGpJBdIXMGkofjQb/j9zvV7a1SW8U9g1FslWx/1HOiQ==
 
+honeycomb-grid@^4.1.5:
+  version "4.1.5"
+  resolved "https://registry.npmmirror.com/honeycomb-grid/-/honeycomb-grid-4.1.5.tgz#326c992cdd82ad87a13d147493351de8fce7d1b5"
+  integrity sha512-VrnQwu5dHuzqK3wFhLD9EURmLSyEWb0teiHhDJq6WdK0MrFsEtKNYT1HLzXOLe2X1acU8Y9hhK7wWfIiGK1G5w==
+
 https-proxy-agent@^5.0.0:
   version "5.0.1"
   resolved "https://registry.npmmirror.com/https-proxy-agent/-/https-proxy-agent-5.0.1.tgz#c59ef224a04fe8b754f3db0063a25ea30d0005d6"
