@@ -6,16 +6,18 @@ import {
 } from './enums';
 import type { MapInfo, HexCellData } from './types';
 import { HexCellView } from '@/terrain_interact/HexCellView';
+import { ServiceManager } from '@/utils/ServiceManager';
 
 export class MapGenerator {
-    private cellDatas: Map<string, HexCell> = new Map();
+    private get cellDatas(): Map<string, HexCell> {
+        return ServiceManager.getInstance().getHexCellMgr().getCellMap();
+    }
     private mapInfo: MapInfo;
     private heightThresholds: { height1: number; height2: number; height3: number; height4: number };
 
     constructor(mapInfo: MapInfo) {
         this.mapInfo = mapInfo;
         this.heightThresholds = { height1: 0, height2: 0, height3: 0, height4: 0 };
-        this.initializeGrid();
     }
 
     private initializeGrid(): void {
@@ -25,13 +27,16 @@ export class MapGenerator {
         );
 
         coordinates.forEach(({ q, r }) => {
-            const cell = new HexCell(q, r);
-            // const cell = this.hexCellMgr.addOrUpdateCell(cellData.q, cellData.r, cellData);
-            this.cellDatas.set(`${q},${r}`, cell);
+            // const cell = new HexCell(q, r);
+            // this.cellDatas.set(`${q},${r}`, cell);
+            const cell = ServiceManager.getInstance().getHexCellMgr().addOrUpdateCell(q, r);
         });
     }
 
     async generateMap(): Promise<HexCellData[]> {
+
+        this.initializeGrid();
+
         await this.generateHeightMap();
         this.classifyTerrain();
         this.generateRivers();

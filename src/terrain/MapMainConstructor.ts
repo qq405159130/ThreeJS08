@@ -34,6 +34,7 @@ export class MapMainConstructor {
         if (isNew)
         {
             mapData.forEach(cellData => {
+                // const cell = new HexCell(q, r);
                 // const cell = this.hexCellMgr.addOrUpdateCell(cellData.q, cellData.r, cellData);
                 const cellView = this.hexCellViewMgr.addOrUpdateCellView(cellData.q, cellData.r, cellData);
             });

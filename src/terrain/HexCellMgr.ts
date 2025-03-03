@@ -7,21 +7,23 @@ export class HexCellMgr {
     constructor() { }
 
     // 添加或更新单元格
-    public addOrUpdateCell(q: number, r: number, data: HexCellData): HexCell {
+    public addOrUpdateCell(q: number, r: number, data?: HexCellData): HexCell {
         const key = `${q},${r}`;
         let cell = this.cells.get(key);
         if (!cell) {
             cell = new HexCell(q, r);
             this.cells.set(key, cell);
         }
-        cell.setHeight(data.height, data.heightLevel);
-        cell.setHumidity(data.humidity, data.humidityLevel);
-        cell.setTerrain(data.terrainType, data.terrainFaceType);
-        cell.data.resourceType = data.resourceType;
-        cell.data.buildType = data.buildType;
-        cell.data.riverLevel = data.riverLevel;
-        cell.data.isBridge = data.isBridge;
-        cell.data.isRoad = data.isRoad;
+        if (data) {
+            cell.setHeight(data.height, data.heightLevel);
+            cell.setHumidity(data.humidity, data.humidityLevel);
+            cell.setTerrain(data.terrainType, data.terrainFaceType);
+            cell.data.resourceType = data.resourceType;
+            cell.data.buildType = data.buildType;
+            cell.data.riverLevel = data.riverLevel;
+            cell.data.isBridge = data.isBridge;
+            cell.data.isRoad = data.isRoad;
+        }
         return cell;
     }
 
@@ -33,6 +35,11 @@ export class HexCellMgr {
     // 获取所有单元格
     public getAllCells(): HexCell[] {
         return Array.from(this.cells.values());
+    }
+
+    public getCellMap(): Map<string, HexCell>
+    {
+        return this.cells;
     }
 
     // 清除所有单元格
