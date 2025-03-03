@@ -6,12 +6,11 @@ import { MapGenerator } from '@/terrain/MapGenerator';
 import { MapRenderer } from '@/terrain_view/MapRenderer';
 
 export class HexGridInteractSystem {
-    private eventManager: EventManager = new EventManager(); // 事件管理器
     private raycaster: THREE.Raycaster = new THREE.Raycaster(); // 光线投射器
     private mouse: THREE.Vector2 = new THREE.Vector2(); // 鼠标位置
     private hoveredCell: HexCellView | null = null; // 当前悬停的单元格
 
-    constructor(private scene: THREE.Scene, private camera: THREE.Camera, private renderer: THREE.WebGLRenderer, private mapRender: MapRenderer) {
+    constructor(private scene: THREE.Scene, private camera: THREE.Camera, private renderer: THREE.WebGLRenderer, private eventManager: EventManager, private mapRender: MapRenderer) {
         this.init();
     }
 
@@ -58,7 +57,7 @@ export class HexGridInteractSystem {
                 intersectedCell.onHover(); // 开始新的悬停
                 this.hoveredCell = intersectedCell;
             }
-            
+
         } else if (this.hoveredCell) {
             this.hoveredCell.onHoverEnd(); // 结束悬停
             this.hoveredCell = null;

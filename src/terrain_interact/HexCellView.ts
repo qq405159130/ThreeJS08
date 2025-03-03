@@ -9,7 +9,7 @@ export class HexCellView {
 
     private eventManager?: EventManager;
 
-    constructor(public q: number, public r: number) {
+    constructor(public q: number, public r: number, mesh?: THREE.Mesh) {
         // 创建六边形网格
         const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 6);
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -24,6 +24,7 @@ export class HexCellView {
 
     // 悬停事件
     public onHover(): void {
+        console.warn("onHover ~~~~~");
         this.isHovered = true;
         (this.mesh.material as THREE.MeshBasicMaterial).color.set(0xff0000); // 高亮红色
         this.eventManager?.emit('cellHover', this);
@@ -31,6 +32,7 @@ export class HexCellView {
 
     // 悬停结束事件
     public onHoverEnd(): void {
+        console.warn("onHoverEnd ~~~~~");
         this.isHovered = false;
         (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
         this.eventManager?.emit('cellHoverEnd', this);
@@ -38,6 +40,7 @@ export class HexCellView {
 
     // 点击事件
     public onClick(): void {
+        console.warn("onClick ~~~~~");
         this.isSelected = !this.isSelected;
         (this.mesh.material as THREE.MeshBasicMaterial).color.set(this.isSelected ? 0x0000ff : 0x00ff00); // 选中蓝色
         this.eventManager?.emit('cellClick', this);

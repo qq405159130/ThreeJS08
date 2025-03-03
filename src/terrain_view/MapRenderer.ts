@@ -6,6 +6,7 @@ import { MapDynamicLoadingSystem } from './MapDynamicLoadingSystem';
 import { MapLODSystem } from './MapLODSystem';
 import { MapGenerator } from '@/terrain/MapGenerator';
 import { HexCellView } from '@/terrain_interact/HexCellView';
+import { EventManager } from '../utils/EventManager';
 
 export class MapRenderer {
     private scene: THREE.Scene;
@@ -16,9 +17,9 @@ export class MapRenderer {
     private lodSystem: MapLODSystem;
 
     public cellViews: Map<string, HexCellView> = new Map(); // 所有六边形网格
-    
 
-    constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer) {
+
+    constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, private eventManager: EventManager) {
         this.scene = scene;
         this.camera = camera;
         this.renderer = renderer;
@@ -36,18 +37,17 @@ export class MapRenderer {
     public renderMap(mapData: HexCellData[]): void {
         mapData.forEach(cell => {
             // const mesh = this.createHexMesh(cell);
-            // this.scene.add(mesh);
-
             const cellView = new HexCellView(cell.q, cell.r);
             this.cellViews.set(`${cell.q},${cell.r}`, cellView);
             this.scene.add(cellView.mesh);
+            cellView.init(this.eventManager);
 
             //暂时屏蔽这两个系统的使用；
             // this.dynamicLoadingSystem.addCell(cell, mesh);
             // this.lodSystem.addMesh(mesh);
         });
     }
-    
+
     /**
      * 更新地图（动态加载和卸载）
      */

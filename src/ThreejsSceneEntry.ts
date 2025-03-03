@@ -6,6 +6,7 @@ import { RenderTest } from './terrain/RenderTest';
 import { MapRenderer } from './terrain_view/MapRenderer';
 import { MapGenerator } from './terrain/MapGenerator';
 import { HexGridInteractSystem } from './terrain_interact/HexGridInteractSystem';
+import { EventManager } from './utils/EventManager';
 
 export class ThreejsSceneTest {
     private scene: THREE.Scene;
@@ -184,6 +185,10 @@ export class ThreejsSceneTest {
             minCities: 3,
             maxCities: 6
         };
+        const eventManager: EventManager = new EventManager(); // 事件管理器
+
+        // 初始化地图渲染器
+        this.mapRenderer = new MapRenderer(this.scene, this.camera, this.renderer, eventManager);
 
         // 生成地图并渲染
         const mapGenerator = new MapGenerator(mapInfo);
@@ -191,10 +196,7 @@ export class ThreejsSceneTest {
             this.mapRenderer?.renderMap(mapData);
         });
 
-        // 初始化地图渲染器
-        this.mapRenderer = new MapRenderer(this.scene, this.camera, this.renderer);
-        
-        const hexGridSystem = new HexGridInteractSystem(this.scene, this.camera, this.renderer, this.mapRenderer);
+        const hexGridSystem = new HexGridInteractSystem(this.scene, this.camera, this.renderer, eventManager, this.mapRenderer);
 
     }
 
