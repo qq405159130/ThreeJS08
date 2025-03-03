@@ -1,3 +1,4 @@
+// src/terrain/HexCell.ts
 import * as THREE from 'three';
 import { EventManager } from '../utils/EventManager';
 
@@ -6,27 +7,16 @@ export class HexCellView {
     public isHovered: boolean = false; // 是否悬停
     public isSelected: boolean = false; // 是否选中
 
-    constructor(
-        public q: number, // 六边形网格的q坐标
-        public r: number, // 六边形网格的r坐标
-        private eventManager: EventManager // 事件管理器
-    ) {
+    constructor(public q: number, public r: number, private eventManager: EventManager) {
         // 创建六边形网格
         const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 6);
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.position.set(q * 1.5, 0, r * Math.sqrt(3) - (q % 2) * (Math.sqrt(3) / 2);
+        this.mesh.position.set(q * 1.5, 0, r * Math.sqrt(3) - (q % 2) * (Math.sqrt(3) / 2));
         this.mesh.rotation.x = Math.PI / 2;
 
-        // 绑定事件
-        this.bindEvents();
-    }
-
-    // 绑定事件
-    private bindEvents(): void {
-        this.mesh.addEventListener('pointerover', () => this.onHover());//Argument of type '"pointerover"' is not assignable to parameter of type 'keyof Object3DEventMap'.ts(2345)
-        this.mesh.addEventListener('pointerout', () => this.onHoverEnd());
-        this.mesh.addEventListener('click', () => this.onClick());
+        // 绑定点击事件
+        this.mesh.addEventListener('click', () => this.onClick());//Argument of type '"click"' is not assignable to parameter of type 'keyof Object3DEventMap'.ts(2345)
     }
 
     // 悬停事件
