@@ -27,9 +27,6 @@ export class MapGenerator {
         coordinates.forEach(({ q, r }) => {
             const cell = new HexCell(q, r);
             this.cellDatas.set(`${q},${r}`, cell);
-
-            // const cellView = new HexCellView(q, r);
-            // this.cellViews.set(`${q},${r}`, cellView);
         });
     }
 

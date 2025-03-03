@@ -35,10 +35,9 @@ export class MapRenderer {
      * @param mapData 地图数据
      */
     public renderMap(mapData: HexCellData[]): void {
-        mapData.forEach(cell => {
-            // const mesh = this.createHexMesh(cell);
-            const cellView = new HexCellView(cell.q, cell.r);
-            this.cellViews.set(`${cell.q},${cell.r}`, cellView);
+        mapData.forEach(cellData => {
+            const cellView = new HexCellView(cellData.q, cellData.r, cellData);
+            this.cellViews.set(`${cellData.q},${cellData.r}`, cellView);
             this.scene.add(cellView.mesh);
             cellView.init(this.eventManager);
 
@@ -57,21 +56,5 @@ export class MapRenderer {
         // this.lodSystem.update();
     }
 
-    /**
-     * 创建六边形网格
-     * @param cell 六边形单元格数据
-     * @returns 六边形网格
-     */
-    private createHexMesh(cell: HexCellData): THREE.Mesh {
-        const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 6);
-        const material = this.terrainMaterialSystem.getMaterial(cell.terrainType);
-        const mesh = new THREE.Mesh(geometry, material);
-        // mesh.renderOrder = 1; // 设置一个较高的渲染顺序
-
-        const x = 1.5 * cell.q;
-        const z = Math.sqrt(3) * (cell.r + cell.q / 2);
-        mesh.position.set(x, 0, z);
-        // console.warn('Created Hex Mesh:', mesh); // 打印网格信息
-        return mesh;
-    }
+    
 }

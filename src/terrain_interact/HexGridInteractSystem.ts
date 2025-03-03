@@ -2,18 +2,30 @@ import * as THREE from 'three';
 import { HexCellView } from './HexCellView';
 import { EventManager } from '../utils/EventManager';
 import { HexGridUtils } from '../terrain/HexGridUtils';
-import { MapGenerator } from '@/terrain/MapGenerator';
-import { MapRenderer } from '@/terrain_view/MapRenderer';
+import { MapRenderer } from '../terrain_view/MapRenderer';
+import { ServiceManager } from '@/utils/ServiceManager';
 
 export class HexGridInteractSystem {
     private raycaster: THREE.Raycaster = new THREE.Raycaster(); // 光线投射器
     private mouse: THREE.Vector2 = new THREE.Vector2(); // 鼠标位置
     private hoveredCell: HexCellView | null = null; // 当前悬停的单元格
+    private eventManager: EventManager;
+    private getMapRenderer(): MapRenderer
+    {
+        return ServiceManager.getInstance().getMapRenderer();
+    }
 
-    constructor(private scene: THREE.Scene, private camera: THREE.Camera, private renderer: THREE.WebGLRenderer, private eventManager: EventManager, private mapRender: MapRenderer) {
+    constructor(
+        private scene: THREE.Scene,
+        private camera: THREE.Camera,
+        private renderer: THREE.WebGLRenderer,
+        eventManager: EventManager
+    ) {
+        this.eventManager = eventManager;
         this.init();
     }
 
+    // 初始化
     private init(): void {
         // 监听事件
         this.eventManager.on('cellHover', (cell: HexCellView) => this.handleCellHover(cell));
@@ -26,12 +38,12 @@ export class HexGridInteractSystem {
         // 绑定鼠标点击事件
         this.renderer.domElement.addEventListener('click', (event) => this.onMouseClick(event));
 
-        console.warn("HexGridInteractSystem init !!!!!!!!!!!!")
-
+        console.warn("HexGridInteractSystem initialized!");
     }
 
+    // 获取所有单元格视图
     private get cellViews(): Map<string, HexCellView> {
-        return this.mapRender.cellViews;
+        return this.getMapRenderer().cellViews;
     }
 
     // 处理鼠标移动事件
@@ -45,9 +57,8 @@ export class HexGridInteractSystem {
 
         // 检测与网格的交互
         const views = Array.from(this.cellViews.values());
-
         const intersects = this.raycaster.intersectObjects(views.map(cell => cell.mesh));
-        console.log("intersects.length   " + intersects.length);//为什么这里输出 0 个？？？？
+
         if (intersects.length > 0) {
             const intersectedCell = views.find(cell => cell.mesh === intersects[0].object);
             if (intersectedCell && intersectedCell !== this.hoveredCell) {
@@ -57,7 +68,6 @@ export class HexGridInteractSystem {
                 intersectedCell.onHover(); // 开始新的悬停
                 this.hoveredCell = intersectedCell;
             }
-
         } else if (this.hoveredCell) {
             this.hoveredCell.onHoverEnd(); // 结束悬停
             this.hoveredCell = null;
@@ -76,6 +86,7 @@ export class HexGridInteractSystem {
         // 检测与网格的交互
         const views = Array.from(this.cellViews.values());
         const intersects = this.raycaster.intersectObjects(views.map(cell => cell.mesh));
+
         if (intersects.length > 0) {
             const intersectedCell = views.find(cell => cell.mesh === intersects[0].object);
             if (intersectedCell) {
@@ -102,5 +113,10 @@ export class HexGridInteractSystem {
     // 处理全局点击事件（取消选中）
     private handleGlobalClick(): void {
         this.cellViews.forEach(cell => cell.cancelAction());
+    }
+
+    // 更新系统
+    public update(): void {
+        // 可以在这里添加每帧更新的逻辑
     }
 }

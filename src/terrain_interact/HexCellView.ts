@@ -1,6 +1,7 @@
 // src/terrain/HexCell.ts
 import * as THREE from 'three';
 import { EventManager } from '../utils/EventManager';
+import { HexCellData } from '../terrain/types';
 
 export class HexCellView {
     public mesh: THREE.Mesh; // 六边形网格的3D对象
@@ -9,13 +10,27 @@ export class HexCellView {
 
     private eventManager?: EventManager;
 
-    constructor(public q: number, public r: number, mesh?: THREE.Mesh) {
-        // 创建六边形网格
+    constructor(public q: number, public r: number, cellData: HexCellData) {
+        this.mesh = this.createHexMesh(cellData);
+    }
+
+    /**
+     * 创建六边形网格
+     * @param cellData 六边形单元格数据
+     * @returns 六边形网格
+     */
+    private createHexMesh(cellData: HexCellData): THREE.Mesh {
         const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 6);
+        // const material = this.terrainMaterialSystem.getMaterial(cell.terrainType);
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.position.set(q * 1.5, 0, r * Math.sqrt(3) - (q % 2) * (Math.sqrt(3) / 2));
-        // this.mesh.rotation.x = Math.PI / 2;
+        const mesh = new THREE.Mesh(geometry, material);
+        // mesh.renderOrder = 1; // 设置一个较高的渲染顺序
+
+        const x = 1.5 * cellData.q;
+        const z = Math.sqrt(3) * (cellData.r + cellData.q / 2);
+        mesh.position.set(x, 0, z);
+        // console.warn('Created Hex Mesh:', mesh); // 打印网格信息
+        return mesh;
     }
 
     public init(eventManager: EventManager) {

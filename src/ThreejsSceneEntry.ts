@@ -7,6 +7,7 @@ import { MapRenderer } from './terrain_view/MapRenderer';
 import { MapGenerator } from './terrain/MapGenerator';
 import { HexGridInteractSystem } from './terrain_interact/HexGridInteractSystem';
 import { EventManager } from './utils/EventManager';
+import { ServiceManager } from './utils/ServiceManager';
 
 export class ThreejsSceneTest {
     private scene: THREE.Scene;
@@ -19,6 +20,8 @@ export class ThreejsSceneTest {
     private isInitialized: boolean = false; // 初始化标志
 
     private mapRenderer?: MapRenderer;
+
+    private serviceManager?: ServiceManager;
 
     constructor() {
         // 初始化场景、相机、渲染器
@@ -58,7 +61,7 @@ export class ThreejsSceneTest {
 
         this.createSky(this.scene);
 
-        this.initMapRender();
+        this.initService();
 
         // 标记初始化完成
         this.isInitialized = true;
@@ -79,7 +82,7 @@ export class ThreejsSceneTest {
         // 渲染场景
         this.renderer.render(this.scene, this.camera);
 
-        this.mapRenderer?.updateMap(); // 更新地图
+        this.updateService();
 
         this.stats.end();
         requestAnimationFrame(() => this.animate());
@@ -93,6 +96,16 @@ export class ThreejsSceneTest {
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
         this.renderer.render(this.scene, this.camera);
+    }
+
+    private initService(): void {
+
+        this.serviceManager = ServiceManager.getInstance();
+        this.serviceManager.initialize(this.scene, this.camera, this.renderer);
+    }
+
+    private updateService(): void {
+        this.serviceManager?.updateFrame();
     }
 
     private debugHelpers(): void {
@@ -168,36 +181,6 @@ export class ThreejsSceneTest {
         }).catch((error) => {
             console.error('Error during map generation:', error);
         });
-    }
-
-
-    private initMapRender(): void {
-
-        // 地图生成参数
-        const mapInfo: MapInfo = {
-            width: 5,
-            height: 2,
-            oceanRatio: 0.3,
-            mountainRatio: 0.15,
-            forestRatio: 0.2,
-            desertRatio: 0.1,
-            snowRatio: 0.1,
-            minCities: 3,
-            maxCities: 6
-        };
-        const eventManager: EventManager = new EventManager(); // 事件管理器
-
-        // 初始化地图渲染器
-        this.mapRenderer = new MapRenderer(this.scene, this.camera, this.renderer, eventManager);
-
-        // 生成地图并渲染
-        const mapGenerator = new MapGenerator(mapInfo);
-        mapGenerator.generateMap().then(mapData => {
-            this.mapRenderer?.renderMap(mapData);
-        });
-
-        const hexGridSystem = new HexGridInteractSystem(this.scene, this.camera, this.renderer, eventManager, this.mapRenderer);
-
     }
 
 
