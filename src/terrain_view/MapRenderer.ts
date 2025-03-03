@@ -16,9 +16,6 @@ export class MapRenderer {
     private dynamicLoadingSystem: MapDynamicLoadingSystem;
     private lodSystem: MapLODSystem;
 
-    public cellViews: Map<string, HexCellView> = new Map(); // 所有六边形网格
-
-
     constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, private eventManager: EventManager) {
         this.scene = scene;
         this.camera = camera;
@@ -36,10 +33,10 @@ export class MapRenderer {
      */
     public renderMap(mapData: HexCellData[]): void {
         mapData.forEach(cellData => {
-            const cellView = new HexCellView(cellData.q, cellData.r, cellData);
-            this.cellViews.set(`${cellData.q},${cellData.r}`, cellView);
-            this.scene.add(cellView.mesh);
-            cellView.init(this.eventManager);
+            // const cellView = new HexCellView(cellData.q, cellData.r, cellData);
+            // cellView.init(this.eventManager);
+            // this.cellViews.set(`${cellData.q},${cellData.r}`, cellView);
+            // this.scene.add(cellView.mesh);
 
             //暂时屏蔽这两个系统的使用；
             // this.dynamicLoadingSystem.addCell(cell, mesh);

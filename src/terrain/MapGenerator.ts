@@ -26,6 +26,7 @@ export class MapGenerator {
 
         coordinates.forEach(({ q, r }) => {
             const cell = new HexCell(q, r);
+            // const cell = this.hexCellMgr.addOrUpdateCell(cellData.q, cellData.r, cellData);
             this.cellDatas.set(`${q},${r}`, cell);
         });
     }

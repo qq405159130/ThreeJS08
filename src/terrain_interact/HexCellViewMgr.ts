@@ -4,10 +4,21 @@ import { EventManager } from '../utils/EventManager';
 import { HexCellData } from '@/terrain/types';
 
 export class HexCellViewMgr {
+    private scene: THREE.Scene;
+    private camera: THREE.PerspectiveCamera;
+    private renderer: THREE.WebGLRenderer;
     private cellViews: Map<string, HexCellView> = new Map();
     private eventManager: EventManager;
 
-    constructor(eventManager: EventManager) {
+    public getCellViews(): Map<string, HexCellView>
+    {
+        return this.cellViews;
+    }
+
+    constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, eventManager: EventManager) {
+        this.scene = scene;
+        this.camera = camera;
+        this.renderer = renderer;
         this.eventManager = eventManager;
     }
 
@@ -17,8 +28,9 @@ export class HexCellViewMgr {
         let cellView = this.cellViews.get(key);
         if (!cellView) {
             cellView = new HexCellView(q, r, cellData);
-            this.cellViews.set(key, cellView);
             cellView.init(this.eventManager);
+            this.cellViews.set(key, cellView);
+            this.scene.add(cellView.mesh);
         }
         return cellView;
     }

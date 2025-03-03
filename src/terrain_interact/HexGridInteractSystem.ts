@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 import { HexCellView } from './HexCellView';
 import { EventManager } from '../utils/EventManager';
-import { HexGridUtils } from '../terrain/HexGridUtils';
-import { MapRenderer } from '../terrain_view/MapRenderer';
 import { ServiceManager } from '@/utils/ServiceManager';
 
 export class HexGridInteractSystem {
@@ -10,10 +8,6 @@ export class HexGridInteractSystem {
     private mouse: THREE.Vector2 = new THREE.Vector2(); // 鼠标位置
     private hoveredCell: HexCellView | null = null; // 当前悬停的单元格
     private eventManager: EventManager;
-    private getMapRenderer(): MapRenderer
-    {
-        return ServiceManager.getInstance().getMapRenderer();
-    }
 
     constructor(
         private scene: THREE.Scene,
@@ -43,7 +37,7 @@ export class HexGridInteractSystem {
 
     // 获取所有单元格视图
     private get cellViews(): Map<string, HexCellView> {
-        return this.getMapRenderer().cellViews;
+        return ServiceManager.getInstance().getHexCellViewMgr().getCellViews();
     }
 
     // 处理鼠标移动事件

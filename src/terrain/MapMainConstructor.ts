@@ -18,7 +18,7 @@ export class MapMainConstructor {
     constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, mapInfo: MapInfo) {
         this.eventManager = new EventManager();
         this.hexCellMgr = new HexCellMgr();
-        this.hexCellViewMgr = new HexCellViewMgr(this.eventManager);
+        this.hexCellViewMgr = new HexCellViewMgr(scene, camera, renderer, this.eventManager);
         this.mapGenerator = new MapGenerator(mapInfo);
         this.mapRenderer = new MapRenderer(scene, camera, renderer, this.eventManager);
         this.hexGridInteractSystem = new HexGridInteractSystem(scene, camera, renderer, this.eventManager);
@@ -26,17 +26,22 @@ export class MapMainConstructor {
 
     // 初始化地图
     public async initializeMap(): Promise<void> {
-        const mapData = await this.mapGenerator.generateMap();
         this.hexCellMgr.clear();
         this.hexCellViewMgr.clear();
+        const mapData = await this.mapGenerator.generateMap();
 
-        mapData.forEach(cellData => {
-            // const cell = this.hexCellMgr.addOrUpdateCell(cellData.q, cellData.r, cellData);
-            // const cellView = this.hexCellViewMgr.addOrUpdateCellView(cellData.q, cellData.r, cellData);
-            // this.mapRenderer.renderMap(cellData);
-        });
-
-        this.mapRenderer.renderMap(mapData);
+        let isNew = true;
+        if (isNew)
+        {
+            mapData.forEach(cellData => {
+                // const cell = this.hexCellMgr.addOrUpdateCell(cellData.q, cellData.r, cellData);
+                const cellView = this.hexCellViewMgr.addOrUpdateCellView(cellData.q, cellData.r, cellData);
+            });
+        }
+        else
+        {
+            this.mapRenderer.renderMap(mapData);
+        }
     }
 
     // 更新地图
