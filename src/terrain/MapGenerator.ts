@@ -236,16 +236,33 @@ export class MapGenerator {
             cell => cell.data.terrainType === eTerrain.Plain && cell.data.riverLevel > 0
         );
 
+        // 如果没有符合条件的单元格，直接返回
+        if (plainCells.length === 0) {
+            console.warn('No valid cells found for city generation.');
+            return;
+        }
+
         const cityCount = Math.floor(
             Math.random() * (this.mapInfo.maxCities - this.mapInfo.minCities + 1) + this.mapInfo.minCities
         );
 
-        for (let i = 0; i < cityCount; i++) {
+        // 确保城市数量不超过可用单元格数量
+        const actualCityCount = Math.min(cityCount, plainCells.length);
+        console.warn('Generating', actualCityCount, 'cities...');
+        for (let i = 0; i < actualCityCount; i++) {
             const index = Math.floor(Math.random() * plainCells.length);
             const cell = plainCells[index];
+            if (!cell) {
+                console.error('Invalid cell at index:', index);
+                continue;
+            }
+
             cell.data.buildType = i === 0 ? eBuild.PrimaryCity :
                 Math.random() < 0.3 ? eBuild.SecondaryCity : eBuild.TertiaryCity;
             this.generateRoadsAroundCity(cell);
+
+            // 从 plainCells 中移除已选择的单元格，避免重复生成城市
+            plainCells.splice(index, 1);
         }
     }
 

@@ -17,9 +17,6 @@ export class RenderTest {
         this.renderer = renderer;
         this.mapGenerator = new MapGenerator(mapInfo);
 
-        // 设置相机位置
-        this.camera.position.set(0, 10, 10);
-        this.camera.lookAt(0, 0, 0);
     }
 
     public async generateAndRenderMap(): Promise<void> {
@@ -28,10 +25,10 @@ export class RenderTest {
     }
 
     private renderHexGrid(mapData: HexCellData[]): void {
-        const hexSize = 2; // 六边形大小
+        const hexSize = 1; // 六边形大小
         const hexHeight = hexSize * Math.sqrt(3);
         const geometry = new THREE.CylinderGeometry(hexSize, hexSize, 1, 6);
-        const material = new THREE.MeshPhongMaterial();
+        const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
         mapData.forEach(cell => {
             const { q, r, terrainType } = cell;
             const color = this.getColorByTerrain(terrainType);
