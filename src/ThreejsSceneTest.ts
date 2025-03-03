@@ -1,5 +1,3 @@
-// === File: ThreejsSceneTest.ts ===
-
 import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { MyCameraControls } from './MyCameraControls';
@@ -14,6 +12,7 @@ export class ThreejsSceneTest {
     private cameraControls: MyCameraControls;
     private clock: THREE.Clock;
     private tempCubes: Map<THREE.Mesh, number> = new Map();
+    private isInitialized: boolean = false; // 初始化标志
 
     constructor() {
         // 初始化场景、相机、渲染器
@@ -22,7 +21,7 @@ export class ThreejsSceneTest {
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('app')?.appendChild(this.renderer.domElement);
-        
+
         // 设置相机位置
         this.camera.position.set(0, 20, 20);
         this.camera.lookAt(0, 0, 0);
@@ -47,6 +46,9 @@ export class ThreejsSceneTest {
         this.initMapRenderTest();
 
         this.createSky(this.scene);
+
+        // 标记初始化完成
+        this.isInitialized = true;
     }
 
     private debugHelpers(): void {
@@ -157,6 +159,8 @@ export class ThreejsSceneTest {
     }
 
     public animate(): void {
+        if (!this.isInitialized) return; // 如果未初始化完成，跳过渲染
+
         this.stats.begin();
 
         // 更新摄像机控制

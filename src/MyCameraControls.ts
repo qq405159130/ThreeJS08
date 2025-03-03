@@ -21,7 +21,7 @@ export class MyCameraControls {
     // 移动速度
     private velocity: THREE.Vector3 = new THREE.Vector3();
     private targetVelocity: THREE.Vector3 = new THREE.Vector3(); // 目标速度
-    private moveSpeed: number = 5; // 移动速度
+    private moveSpeed: number = 10; // 移动速度
     private smoothFactor: number = 0.1; // 平滑因子
 
     constructor(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
