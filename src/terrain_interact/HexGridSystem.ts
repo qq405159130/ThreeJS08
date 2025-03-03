@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { HexCellView } from './HexCellView';
 import { EventManager } from '../utils/EventManager';
-import { HexGridUtils } from './HexGridUtils';
+import { HexGridUtils } from '../terrain/HexGridUtils';
 
 export class HexGridSystem {
     private cells: HexCellView[] = []; // 所有六边形网格
