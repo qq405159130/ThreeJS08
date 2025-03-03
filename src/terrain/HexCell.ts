@@ -45,4 +45,7 @@ export class HexCell {
     }
 
     // 其他属性的设置方法...
+
+
+    
 }

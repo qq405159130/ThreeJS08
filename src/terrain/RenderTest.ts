@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MapGenerator } from './MapGenerator';
 import type { MapInfo, HexCellData } from './types';
 import { HexGridUtils } from './HexGridUtils';
+import { HexGridSystem } from './HexGridSystem';
 
 export class RenderTest {
     private scene: THREE.Scene;
@@ -10,6 +11,8 @@ export class RenderTest {
     private mapGenerator: MapGenerator;
     private mapInfo: MapInfo;
 
+    private hexGridSystem: HexGridSystem;
+    
     constructor(mapInfo: MapInfo, scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer) {
         this.mapInfo = mapInfo;
         this.scene = scene;
@@ -17,6 +20,8 @@ export class RenderTest {
         this.renderer = renderer;
         this.mapGenerator = new MapGenerator(mapInfo);
 
+        // 初始化六边形网格系统
+        this.hexGridSystem = new HexGridSystem(this.scene, this.camera, this.renderer);
     }
 
     public async generateAndRenderMap(): Promise<void> {
