@@ -1,4 +1,4 @@
-import { ThreejsSceneTest } from './ThreejsSceneTest';
+import { ThreejsSceneTest } from './ThreejsSceneEntry';
 
 // 确保页面加载完成后再初始化 Three.js 场景
 window.onload = () => {
