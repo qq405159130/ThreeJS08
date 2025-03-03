@@ -14,12 +14,12 @@ export class TerrainMaterialSystem {
      * 初始化地形材质
      */
     private initializeMaterials(): void {
-        this.materials.set(eTerrain.Ocean, new THREE.MeshStandardMaterial({ color: 0x0000ff }));
-        this.materials.set(eTerrain.Plain, new THREE.MeshStandardMaterial({ color: 0x00ff00 }));
-        this.materials.set(eTerrain.Hill, new THREE.MeshStandardMaterial({ color: 0x808000 }));
-        this.materials.set(eTerrain.Mountain, new THREE.MeshStandardMaterial({ color: 0x8b4513 }));
-        this.materials.set(eTerrain.HighMountain, new THREE.MeshStandardMaterial({ color: 0xffffff }));
-        this.materials.set(eTerrain.Lake, new THREE.MeshStandardMaterial({ color: 0x00ffff }));
+        this.materials.set(eTerrain.Ocean, new THREE.MeshBasicMaterial({ color: 0x0000ff }));
+        this.materials.set(eTerrain.Plain, new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+        this.materials.set(eTerrain.Hill, new THREE.MeshBasicMaterial({ color: 0x808000 }));
+        this.materials.set(eTerrain.Mountain, new THREE.MeshBasicMaterial({ color: 0x8b4513 }));
+        this.materials.set(eTerrain.HighMountain, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+        this.materials.set(eTerrain.Lake, new THREE.MeshBasicMaterial({ color: 0x00ffff }));
     }
 
     /**
@@ -28,6 +28,6 @@ export class TerrainMaterialSystem {
      * @returns 对应的材质
      */
     public getMaterial(terrainType: eTerrain): THREE.Material {
-        return this.materials.get(terrainType) || new THREE.MeshStandardMaterial({ color: 0x000000 });
+        return this.materials.get(terrainType) || new THREE.MeshBasicMaterial({ color: 0x000000 });
     }
 }

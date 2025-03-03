@@ -25,6 +25,7 @@ export class ThreejsSceneTest {
         this.renderer = new THREE.WebGLRenderer({ antialias: true });//启用 WebGL 渲染器的抗锯齿，以提高渲染质量
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('app')?.appendChild(this.renderer.domElement);
+        // this.renderer.sortObjects = true; // 确保物体按深度排序
 
         const light = new THREE.DirectionalLight(0xffffff, 10);
         light.position.set(1, 1, 1).normalize();

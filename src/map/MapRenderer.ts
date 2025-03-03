@@ -32,8 +32,9 @@ export class MapRenderer {
         mapData.forEach(cell => {
             const mesh = this.createHexMesh(cell);
             this.scene.add(mesh);
-            this.dynamicLoadingSystem.addCell(cell, mesh);
-            this.lodSystem.addMesh(mesh);
+            //暂时屏蔽这两个系统的使用；
+            // this.dynamicLoadingSystem.addCell(cell, mesh);
+            // this.lodSystem.addMesh(mesh);
         });
     }
 
@@ -41,8 +42,9 @@ export class MapRenderer {
      * 更新地图（动态加载和卸载）
      */
     public updateMap(): void {
-        this.dynamicLoadingSystem.update(this.camera.position);
-        this.lodSystem.update();
+        //暂时屏蔽这两个系统的使用；
+        // this.dynamicLoadingSystem.update(this.camera.position);
+        // this.lodSystem.update();
     }
 
     /**
@@ -54,11 +56,12 @@ export class MapRenderer {
         const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 6);
         const material = this.terrainMaterialSystem.getMaterial(cell.terrainType);
         const mesh = new THREE.Mesh(geometry, material);
+        // mesh.renderOrder = 1; // 设置一个较高的渲染顺序
 
         const x = 1.5 * cell.q;
         const z = Math.sqrt(3) * (cell.r + cell.q / 2);
         mesh.position.set(x, 0, z);
-
+        // console.warn('Created Hex Mesh:', mesh); // 打印网格信息
         return mesh;
     }
 }
