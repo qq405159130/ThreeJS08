@@ -3,8 +3,9 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 import { MyCameraControls } from './MyCameraControls';
 import { MapInfo } from './terrain/types';
 import { RenderTest } from './terrain/RenderTest';
-import { MapRenderer } from './map/MapRenderer';
+import { MapRenderer } from './terrain_view/MapRenderer';
 import { MapGenerator } from './terrain/MapGenerator';
+import { HexGridInteractSystem } from './terrain_interact/HexGridInteractSystem';
 
 export class ThreejsSceneTest {
     private scene: THREE.Scene;
@@ -183,14 +184,18 @@ export class ThreejsSceneTest {
             minCities: 3,
             maxCities: 6
         };
-        // 初始化地图渲染器
-        this.mapRenderer = new MapRenderer(this.scene, this.camera, this.renderer);
 
         // 生成地图并渲染
         const mapGenerator = new MapGenerator(mapInfo);
         mapGenerator.generateMap().then(mapData => {
             this.mapRenderer?.renderMap(mapData);
         });
+
+        // 初始化地图渲染器
+        this.mapRenderer = new MapRenderer(this.scene, this.camera, this.renderer);
+        
+        const hexGridSystem = new HexGridInteractSystem(this.scene, this.camera, this.renderer, this.mapRenderer);
+
     }
 
 

@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { eTerrain } from '../terrain/enums';
 
-export class TerrainMaterialSystem {
+export class MapMaterialSystem {
     private materials: Map<eTerrain, THREE.Material>;
 
     constructor() {

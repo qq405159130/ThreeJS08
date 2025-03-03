@@ -7,7 +7,9 @@ export class HexCellView {
     public isHovered: boolean = false; // 是否悬停
     public isSelected: boolean = false; // 是否选中
 
-    constructor(public q: number, public r: number, private eventManager: EventManager) {
+    private eventManager?: EventManager;
+
+    constructor(public q: number, public r: number) {
         // 创建六边形网格
         const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 6);
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -16,25 +18,29 @@ export class HexCellView {
         // this.mesh.rotation.x = Math.PI / 2;
     }
 
+    public init(eventManager: EventManager) {
+        this.eventManager = eventManager;
+    }
+
     // 悬停事件
     public onHover(): void {
         this.isHovered = true;
         (this.mesh.material as THREE.MeshBasicMaterial).color.set(0xff0000); // 高亮红色
-        this.eventManager.emit('cellHover', this);
+        this.eventManager?.emit('cellHover', this);
     }
 
     // 悬停结束事件
     public onHoverEnd(): void {
         this.isHovered = false;
         (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
-        this.eventManager.emit('cellHoverEnd', this);
+        this.eventManager?.emit('cellHoverEnd', this);
     }
 
     // 点击事件
     public onClick(): void {
         this.isSelected = !this.isSelected;
         (this.mesh.material as THREE.MeshBasicMaterial).color.set(this.isSelected ? 0x0000ff : 0x00ff00); // 选中蓝色
-        this.eventManager.emit('cellClick', this);
+        this.eventManager?.emit('cellClick', this);
     }
 
     // 取消操作

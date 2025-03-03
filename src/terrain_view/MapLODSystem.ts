@@ -1,7 +1,7 @@
 // game/src/map/LODSystem.ts
 import * as THREE from 'three';
 
-export class LODSystem {
+export class MapLODSystem {
     private scene: THREE.Scene;
     private camera: THREE.PerspectiveCamera;
     private meshes: THREE.Mesh[];

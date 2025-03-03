@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { MapGenerator } from './MapGenerator';
 import type { MapInfo, HexCellData } from './types';
 import { HexGridUtils } from './HexGridUtils';
-import { HexGridSystem } from '../terrain_interact/HexGridSystem';
+import { HexGridInteractSystem } from '../terrain_interact/HexGridInteractSystem';
 
 export class RenderTest {
     private scene: THREE.Scene;

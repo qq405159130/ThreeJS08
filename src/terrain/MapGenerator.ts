@@ -5,9 +5,10 @@ import {
     eTerrain, eTerrainFace, eHeightLevel, eHumidityLevel, eBuild, eResource
 } from './enums';
 import type { MapInfo, HexCellData } from './types';
+import { HexCellView } from '@/terrain_interact/HexCellView';
 
 export class MapGenerator {
-    private cells: Map<string, HexCell> = new Map();
+    private cellDatas: Map<string, HexCell> = new Map();
     private mapInfo: MapInfo;
     private heightThresholds: { height1: number; height2: number; height3: number; height4: number };
 
@@ -25,7 +26,10 @@ export class MapGenerator {
 
         coordinates.forEach(({ q, r }) => {
             const cell = new HexCell(q, r);
-            this.cells.set(`${q},${r}`, cell);
+            this.cellDatas.set(`${q},${r}`, cell);
+
+            // const cellView = new HexCellView(q, r);
+            // this.cellViews.set(`${q},${r}`, cellView);
         });
     }
 
@@ -38,7 +42,7 @@ export class MapGenerator {
         this.generateResources();
         this.generateCities();
 
-        return Array.from(this.cells.values()).map(cell => cell.data);
+        return Array.from(this.cellDatas.values()).map(cell => cell.data);
     }
 
     private async generateHeightMap(): Promise<void> {
@@ -63,7 +67,7 @@ export class MapGenerator {
         this.heightThresholds.height3 = this.heightThresholds.height1 + (this.heightThresholds.height4 - this.heightThresholds.height1) * 0.66;
 
         // 应用高度等级到单元格
-        this.cells.forEach(cell => {
+        this.cellDatas.forEach(cell => {
             const idx = cell.data.q * height + cell.data.r;
             const heightValue = noiseMap[idx];
 
@@ -85,7 +89,7 @@ export class MapGenerator {
     }
 
     private classifyTerrain(): void {
-        this.cells.forEach(cell => {
+        this.cellDatas.forEach(cell => {
             const { heightLevel, height } = cell.data;
             let terrain: eTerrain;
 
@@ -114,7 +118,7 @@ export class MapGenerator {
     }
 
     private generateRivers(): void {
-        const mountainCells = Array.from(this.cells.values()).filter(
+        const mountainCells = Array.from(this.cellDatas.values()).filter(
             cell => cell.data.terrainType === eTerrain.HighMountain
         );
 
@@ -130,7 +134,7 @@ export class MapGenerator {
         while (currentCell.data.terrainType !== eTerrain.Ocean) {
             currentCell.data.riverLevel = 1;
             const neighbors = HexGridUtils.getNeighbors(currentCell.data.q, currentCell.data.r)
-                .map(coord => this.cells.get(`${coord.q},${coord.r}`))
+                .map(coord => this.cellDatas.get(`${coord.q},${coord.r}`))
                 .filter(Boolean) as HexCell[];
 
             const nextCell = neighbors.reduce((lowest, cell) =>
@@ -146,7 +150,7 @@ export class MapGenerator {
         const { width, height } = this.mapInfo;
         const latitudeBands = 5; // 将地图分为5个纬度带
 
-        this.cells.forEach(cell => {
+        this.cellDatas.forEach(cell => {
             const lat = Math.abs(cell.data.r) / height; // 纬度比例
             const latBand = Math.floor(lat * latitudeBands);
 
@@ -157,7 +161,7 @@ export class MapGenerator {
 
             // 根据水源调整湿度
             const neighbors = HexGridUtils.getNeighbors(cell.data.q, cell.data.r)
-                .map(coord => this.cells.get(`${coord.q},${coord.r}`))
+                .map(coord => this.cellDatas.get(`${coord.q},${coord.r}`))
                 .filter(Boolean) as HexCell[];
 
             const waterSources = neighbors.filter(
@@ -177,7 +181,7 @@ export class MapGenerator {
     }
 
     private generateTerrainFace(): void {
-        this.cells.forEach(cell => {
+        this.cellDatas.forEach(cell => {
             const { terrainType, humidityLevel, heightLevel } = cell.data;
             let face: eTerrainFace;
 
@@ -208,7 +212,7 @@ export class MapGenerator {
     }
 
     private generateResources(): void {
-        this.cells.forEach(cell => {
+        this.cellDatas.forEach(cell => {
             const { terrainFaceType } = cell.data;
             let resource: eResource | null = null;
 
@@ -232,7 +236,7 @@ export class MapGenerator {
     }
 
     private generateCities(): void {
-        const plainCells = Array.from(this.cells.values()).filter(
+        const plainCells = Array.from(this.cellDatas.values()).filter(
             cell => cell.data.terrainType === eTerrain.Plain && cell.data.riverLevel > 0
         );
 
@@ -268,7 +272,7 @@ export class MapGenerator {
 
     private generateRoadsAroundCity(cityCell: HexCell): void {
         const neighbors = HexGridUtils.getNeighbors(cityCell.data.q, cityCell.data.r)
-            .map(coord => this.cells.get(`${coord.q},${coord.r}`))
+            .map(coord => this.cellDatas.get(`${coord.q},${coord.r}`))
             .filter(Boolean) as HexCell[];
 
         neighbors.forEach(neighbor => {

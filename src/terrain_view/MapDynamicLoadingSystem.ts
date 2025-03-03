@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { HexCellData } from '../terrain/types';
 
-export class DynamicLoadingSystem {
+export class MapDynamicLoadingSystem {
     private scene: THREE.Scene;
     private loadedCells: Map<string, THREE.Mesh>;
     private loadingDistance: number = 10; // 加载距离

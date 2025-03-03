@@ -1,17 +1,22 @@
 // game/src/map/MapRenderer.ts
 import * as THREE from 'three';
 import { HexCellData } from '../terrain/types';
-import { TerrainMaterialSystem } from './TerrainMaterialSystem';
-import { DynamicLoadingSystem } from './DynamicLoadingSystem';
-import { LODSystem } from './LODSystem';
+import { MapMaterialSystem } from './MapMaterialSystem';
+import { MapDynamicLoadingSystem } from './MapDynamicLoadingSystem';
+import { MapLODSystem } from './MapLODSystem';
+import { MapGenerator } from '@/terrain/MapGenerator';
+import { HexCellView } from '@/terrain_interact/HexCellView';
 
 export class MapRenderer {
     private scene: THREE.Scene;
     private camera: THREE.PerspectiveCamera;
     private renderer: THREE.WebGLRenderer;
-    private terrainMaterialSystem: TerrainMaterialSystem;
-    private dynamicLoadingSystem: DynamicLoadingSystem;
-    private lodSystem: LODSystem;
+    private terrainMaterialSystem: MapMaterialSystem;
+    private dynamicLoadingSystem: MapDynamicLoadingSystem;
+    private lodSystem: MapLODSystem;
+
+    public cellViews: Map<string, HexCellView> = new Map(); // 所有六边形网格
+    
 
     constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer) {
         this.scene = scene;
@@ -19,9 +24,9 @@ export class MapRenderer {
         this.renderer = renderer;
 
         // 初始化子系统
-        this.terrainMaterialSystem = new TerrainMaterialSystem();
-        this.dynamicLoadingSystem = new DynamicLoadingSystem(scene);
-        this.lodSystem = new LODSystem(scene, camera);
+        this.terrainMaterialSystem = new MapMaterialSystem();
+        this.dynamicLoadingSystem = new MapDynamicLoadingSystem(scene);
+        this.lodSystem = new MapLODSystem(scene, camera);
     }
 
     /**
@@ -30,14 +35,19 @@ export class MapRenderer {
      */
     public renderMap(mapData: HexCellData[]): void {
         mapData.forEach(cell => {
-            const mesh = this.createHexMesh(cell);
-            this.scene.add(mesh);
+            // const mesh = this.createHexMesh(cell);
+            // this.scene.add(mesh);
+
+            const cellView = new HexCellView(cell.q, cell.r);
+            this.cellViews.set(`${cell.q},${cell.r}`, cellView);
+            this.scene.add(cellView.mesh);
+
             //暂时屏蔽这两个系统的使用；
             // this.dynamicLoadingSystem.addCell(cell, mesh);
             // this.lodSystem.addMesh(mesh);
         });
     }
-
+    
     /**
      * 更新地图（动态加载和卸载）
      */
