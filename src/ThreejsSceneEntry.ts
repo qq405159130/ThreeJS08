@@ -3,10 +3,6 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 import { MyCameraControls } from './MyCameraControls';
 import { MapInfo } from './terrain/types';
 import { RenderTest } from './terrain/RenderTest';
-import { MapRenderer } from './terrain_view/MapRenderer';
-import { MapGenerator } from './terrain/MapGenerator';
-import { HexGridInteractSystem } from './terrain_interact/HexGridInteractSystem';
-import { EventManager } from './utils/EventManager';
 import { ServiceManager } from './utils/ServiceManager';
 
 export class ThreejsSceneTest {

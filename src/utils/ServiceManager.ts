@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { HexCellMgr } from '../terrain/HexCellMgr';
 import { HexCellViewMgr } from '../terrain_interact/HexCellViewMgr';
 import { MapGenerator } from '../terrain/MapGenerator';
-import { MapRenderer } from '../terrain_view/MapRenderer';
 import { HexGridInteractSystem } from '../terrain_interact/HexGridInteractSystem';
 import { EventManager } from './EventManager';
 import { MapMainConstructor } from '../terrain/MapMainConstructor';
@@ -26,8 +25,8 @@ export class ServiceManager {
 
         // 地图生成参数
         const mapInfo: MapInfo = {
-            width: 15,
-            height: 15,
+            width: 10,
+            height: 30,
             oceanRatio: 0.3,
             mountainRatio: 0.15,
             forestRatio: 0.2,
@@ -77,14 +76,6 @@ export class ServiceManager {
             throw new Error('MapMainConstructor is not initialized');
         }
         return this.mapMainConstructor.getMapGenerator();
-    }
-
-    // 获取MapRenderer
-    public getMapRenderer(): MapRenderer {
-        if (!this.mapMainConstructor) {
-            throw new Error('MapMainConstructor is not initialized');
-        }
-        return this.mapMainConstructor.getMapRenderer();
     }
 
     // 获取HexGridInteractSystem
