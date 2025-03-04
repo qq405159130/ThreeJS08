@@ -144,7 +144,8 @@ def show_options():
     user_input = input("请输入选项：(默认空白), 1, 2: ").strip()
 
     # 设置根文件夹为当前脚本所在目录
-    root_folder = os.path.dirname(os.path.abspath(__file__))
+    root_folder = os.path.dirname(os.path.abspath(__file__)) #取__file__所在目录作为根目录
+    # root_folder = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) #取__file__所在目录的父目录的父目录作为根目录
 
     # 设置相对路径
     src_relative = "game/src"  # src 文件夹相对于根文件夹的路径
