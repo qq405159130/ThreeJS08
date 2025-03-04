@@ -20,7 +20,14 @@ export class HexCellHoverEffect {
             const edges = new THREE.EdgesGeometry(this.mesh.geometry);
             const borderMaterial = new THREE.LineBasicMaterial({ color: 0xffff00, linewidth: 2 }); // 黄色边框
             this.border = new THREE.LineSegments(edges, borderMaterial);
-
+            //避免干扰
+            this.border.castShadow = false;
+            this.border.receiveShadow = false;
+            this.border.raycast = () => null;
+            //尽量让 border 节省性能
+            this.border.name = 'border';
+            this.border.matrixAutoUpdate = false;
+            this.border.updateMatrix();
             this.mesh.add(this.border);
         }
 
@@ -29,7 +36,14 @@ export class HexCellHoverEffect {
             const overlayGeometry = this.mesh.geometry.clone();
             const overlayMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 }); // 白色半透明
             this.overlay = new THREE.Mesh(overlayGeometry, overlayMaterial);
-
+            //避免干扰
+            this.overlay.castShadow = false;
+            this.overlay.receiveShadow = false;
+            this.overlay.raycast = () => null;
+            //尽量让 overlay 节省性能
+            this.overlay.name = 'overlay';
+            this.overlay.matrixAutoUpdate = false;
+            this.overlay.updateMatrix();
             this.mesh.add(this.overlay);
         }
 
