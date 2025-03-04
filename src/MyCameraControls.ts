@@ -178,6 +178,10 @@ export class MyCameraControls {
 
         // 平滑速度
         this.velocity.lerp(this.targetVelocity, this.smoothFactor);
+        //如果velocity 和 targetVelocity 之差，小于一定插值，直接赋值
+        if (this.velocity.distanceTo(this.targetVelocity) < 0.01) {
+            this.velocity.copy(this.targetVelocity);
+        }
 
         // 将速度向量转换为摄像机本地坐标系
         const direction = new THREE.Vector3();
