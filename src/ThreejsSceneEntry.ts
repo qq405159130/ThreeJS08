@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { MyCameraControls } from './MyCameraControls';
 import { ServiceManager } from './utils/ServiceManager';
+import { eSceneMount, SceneManager } from './SceneManager';
 
 export class ThreejsSceneTest {
     private scene: THREE.Scene;
@@ -18,6 +19,7 @@ export class ThreejsSceneTest {
     constructor() {
         // 初始化场景、相机、渲染器
         this.scene = new THREE.Scene();
+        SceneManager.init(this.scene);
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });//启用 WebGL 渲染器的抗锯齿，以提高渲染质量
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -160,7 +162,7 @@ export class ThreejsSceneTest {
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         const tempCube = new THREE.Mesh(geometry, material);
         const currentTime = performance.now();
-        this.scene.add(tempCube);
+        SceneManager.get(eSceneMount.bullet).add(tempCube);
         tempCube.position.set(Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5);
         tempCube.scale.set(0.1, 0.1, 0.1);
         this.tempCubes.set(tempCube, currentTime);
@@ -168,7 +170,7 @@ export class ThreejsSceneTest {
         // 清理旧的临时立方体
         this.tempCubes.forEach((creationTime, cube) => {
             if (currentTime - creationTime >= 10000) { // 10 seconds
-                this.scene.remove(cube);
+                SceneManager.get(eSceneMount.bullet).remove(cube);
                 this.tempCubes.delete(cube);
             }
         });
