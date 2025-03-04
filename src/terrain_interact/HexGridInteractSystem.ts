@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { HexCellView } from './HexCellView';
 import { EventManager } from '../utils/EventManager';
 import { ServiceManager } from '@/utils/ServiceManager';
+import { MyCameraControls } from '@/MyCameraControls';
 
 export class HexGridInteractSystem {
     private raycaster: THREE.Raycaster = new THREE.Raycaster(); // 光线投射器
@@ -43,8 +44,8 @@ export class HexGridInteractSystem {
     // 处理鼠标移动事件
     private onMouseMove(event: MouseEvent): void {
         // 将鼠标位置归一化为设备坐标（-1到+1）
-        this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        this.mouse.x = MyCameraControls.isPointerLocked ? 0 : (event.clientX / window.innerWidth) * 2 - 1;
+        this.mouse.y = MyCameraControls.isPointerLocked ? 0 : -(event.clientY / window.innerHeight) * 2 + 1;
 
         // 更新光线投射器
         this.raycaster.setFromCamera(this.mouse, this.camera);

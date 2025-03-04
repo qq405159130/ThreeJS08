@@ -8,7 +8,7 @@ export class MyCameraControls {
     private scene: THREE.Scene;
     private pointerLockControls: PointerLockControls;
     private orbitControls: OrbitControls;
-    private isPointerLocked: boolean = false;
+    public static isPointerLocked: boolean = false;
 
     // 键盘状态
     private moveForward: boolean = false;
@@ -50,7 +50,7 @@ export class MyCameraControls {
 
 
         window.addEventListener('click', (event) => {
-            if (this.isPointerLocked)
+            if (MyCameraControls.isPointerLocked)
                 return;
             const canvas = this.renderer.domElement;
             const rect = canvas.getBoundingClientRect();
@@ -64,7 +64,7 @@ export class MyCameraControls {
         // setTimeout(() => {
         //     this.renderer.domElement.addEventListener('click', () => {
         //         console.log('Click event triggered'); // 调试信息
-        //         if (!this.isPointerLocked) {
+        //         if (!MyCameraControls.isPointerLocked) {
         //             this.enablePointerLock();
         //         }
         //     });
@@ -77,9 +77,9 @@ export class MyCameraControls {
     }
 
     private onPointerLockChange() {
-        this.isPointerLocked = document.pointerLockElement === this.renderer.domElement;
-        console.warn('   Pointer lock state:', this.isPointerLocked);
-        if (!this.isPointerLocked) {
+        MyCameraControls.isPointerLocked = document.pointerLockElement === this.renderer.domElement;
+        console.warn('   Pointer lock state:', MyCameraControls.isPointerLocked);
+        if (!MyCameraControls.isPointerLocked) {
             // 退出PointerLock时重置键盘状态
             this.moveForward = false;
             this.moveBackward = false;
@@ -93,7 +93,7 @@ export class MyCameraControls {
     private onRenderClick() {
         console.warn("   onRenderClick   ")
 
-        if (!this.isPointerLocked) {
+        if (!MyCameraControls.isPointerLocked) {
             this.enablePointerLock();
         }
     }
@@ -153,7 +153,7 @@ export class MyCameraControls {
     }
 
     public update(deltaTime: number) {
-        if (this.isPointerLocked) {
+        if (MyCameraControls.isPointerLocked) {
             // 如果启用了PointerLockControls，则禁用OrbitControls
             this.orbitControls.enabled = false;
             this.updatePer(deltaTime);

@@ -43,6 +43,9 @@ export class ServiceManager {
 
     public updateFrame(): void {
         this.mapMainConstructor?.updateMap();
+        
+        // 更新交互系统
+        this.getHexGridInteractSystem().update();
     }
 
     public getMapMainConstructor(): MapMainConstructor {

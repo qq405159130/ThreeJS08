@@ -19,8 +19,6 @@ export class ThreejsSceneTest {
     private tempCubes: Map<THREE.Mesh, number> = new Map();
     private isInitialized: boolean = false; // 初始化标志
 
-    private mapRenderer?: MapRenderer;
-
     private serviceManager?: ServiceManager;
 
     constructor() {
@@ -45,6 +43,7 @@ export class ThreejsSceneTest {
         document.body.appendChild(this.stats.dom);
 
         // 初始化摄像机控制
+        
         this.cameraControls = new MyCameraControls(this.camera, this.renderer, this.scene);
 
         // 初始化时钟

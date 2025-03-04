@@ -2,6 +2,7 @@ import { HexCell } from './HexCell';
 import { HexCellData } from './types';
 
 export class HexCellMgr {
+    private ID: number = 0;
     private cells: Map<string, HexCell> = new Map();
 
     constructor() { }
@@ -24,6 +25,8 @@ export class HexCellMgr {
             cell.data.isBridge = data.isBridge;
             cell.data.isRoad = data.isRoad;
         }
+        console.warn("addOrUpdateCell  ID: " + this.ID);
+        this.ID++;
         return cell;
     }
 
@@ -37,8 +40,7 @@ export class HexCellMgr {
         return Array.from(this.cells.values());
     }
 
-    public getCellMap(): Map<string, HexCell>
-    {
+    public getCellMap(): Map<string, HexCell> {
         return this.cells;
     }
 
