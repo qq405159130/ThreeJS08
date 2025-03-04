@@ -53,14 +53,13 @@ export class HexGridInteractSystem {
         // 将鼠标位置归一化为设备坐标（-1到+1）
         this.mouse.x = MyCameraControls.isPointerLocked ? 0 : (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = MyCameraControls.isPointerLocked ? 0 : -(event.clientY / window.innerHeight) * 2 + 1;
-
         // 更新光线投射器
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
         // 检测与网格的交互
         const views = Array.from(this.cellViews.values());
         const intersects = this.raycaster.intersectObjects(views.map(cell => cell.mesh));
-
+        console.warn(`hover     views:${views.length}       intersects:${intersects.length}    this.scene.children.length: ${this.scene.children.length}`);
         if (intersects.length > 0) {
             const intersectedCell = views.find(cell => cell.mesh === intersects[0].object);
             if (intersectedCell && intersectedCell !== this.hoveredCell) {

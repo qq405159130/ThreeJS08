@@ -165,6 +165,9 @@ export class ThreejsSceneTest {
         SceneManager.get(eSceneMount.bullet).add(tempCube);
         tempCube.position.set(Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5);
         tempCube.scale.set(0.1, 0.1, 0.1);
+        tempCube.castShadow = false;
+        tempCube.receiveShadow = false;
+        tempCube.raycast = () => false;
         this.tempCubes.set(tempCube, currentTime);
 
         // 清理旧的临时立方体

@@ -16,16 +16,32 @@ export class MapViewUtils {
         return this.hexGeometryCache;
     }
 
+
+    /**
+     * 根据地形类型获取颜色
+     */
+    public static getColor(terrainType: eTerrain): THREE.Color {
+        switch (terrainType) {
+            case eTerrain.Ocean: return new THREE.Color(0x0000ff); // 海洋 - 蓝色
+            case eTerrain.Plain: return new THREE.Color(0x00ff00); // 平原 - 绿色
+            case eTerrain.Hill: return new THREE.Color(0x808000); // 丘陵 - 橄榄色
+            case eTerrain.Mountain: return new THREE.Color(0x8b4513); // 山地 - 棕色
+            case eTerrain.HighMountain: return new THREE.Color(0xffffff); // 高山 - 白色
+            case eTerrain.Lake: return new THREE.Color(0x00ffff); // 湖泊 - 青色
+            default: return new THREE.Color(0x000000); // 未知 - 黑色
+        }
+    }
+
     /**
      * 初始化地形材质
      */
     private static initializeMaterials(): void {
-        this._materials.set(eTerrain.Ocean, new THREE.MeshBasicMaterial({ color: 0x0000ff }));
-        this._materials.set(eTerrain.Plain, new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
-        this._materials.set(eTerrain.Hill, new THREE.MeshBasicMaterial({ color: 0x808000 }));
-        this._materials.set(eTerrain.Mountain, new THREE.MeshBasicMaterial({ color: 0x8b4513 }));
-        this._materials.set(eTerrain.HighMountain, new THREE.MeshBasicMaterial({ color: 0xffffff }));
-        this._materials.set(eTerrain.Lake, new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+        this._materials.set(eTerrain.Ocean, new THREE.MeshBasicMaterial({ color: this.getColor(eTerrain.Ocean) }));
+        this._materials.set(eTerrain.Plain, new THREE.MeshBasicMaterial({ color: this.getColor(eTerrain.Plain) }));
+        this._materials.set(eTerrain.Hill, new THREE.MeshBasicMaterial({ color: this.getColor(eTerrain.Hill) }));
+        this._materials.set(eTerrain.Mountain, new THREE.MeshBasicMaterial({ color: this.getColor(eTerrain.Mountain) }));
+        this._materials.set(eTerrain.HighMountain, new THREE.MeshBasicMaterial({ color: this.getColor(eTerrain.HighMountain) }));
+        this._materials.set(eTerrain.Lake, new THREE.MeshBasicMaterial({ color: this.getColor(eTerrain.Lake) }));
     }
 
     /**
