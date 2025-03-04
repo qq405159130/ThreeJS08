@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { MyCameraControls } from './MyCameraControls';
-import { MapInfo } from './terrain/types';
-import { RenderTest } from './terrain/RenderTest';
 import { ServiceManager } from './utils/ServiceManager';
 
 export class ThreejsSceneTest {
@@ -39,7 +37,7 @@ export class ThreejsSceneTest {
         document.body.appendChild(this.stats.dom);
 
         // 初始化摄像机控制
-        
+
         this.cameraControls = new MyCameraControls(this.camera, this.renderer, this.scene);
 
         // 初始化时钟
@@ -155,28 +153,6 @@ export class ThreejsSceneTest {
         this.scene.add(boxHelper);
     }
 
-    private initMapRenderTest(): void {
-        // 地图生成参数
-        const mapInfo: MapInfo = {
-            width: 5,
-            height: 2,
-            oceanRatio: 0.3,
-            mountainRatio: 0.15,
-            forestRatio: 0.2,
-            desertRatio: 0.1,
-            snowRatio: 0.1,
-            minCities: 3,
-            maxCities: 6
-        };
-
-        // 创建渲染测试实例
-        const renderTest = new RenderTest(mapInfo, this.scene, this.camera, this.renderer);
-        renderTest.generateAndRenderMap().then(() => {
-            console.warn('Map generation and rendering completed.');
-        }).catch((error) => {
-            console.error('Error during map generation:', error);
-        });
-    }
 
 
     private createTempCubes(): void {
