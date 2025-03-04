@@ -29,6 +29,7 @@ export class HexCellView {
         const x = 1.5 * cellData.q;
         const z = Math.sqrt(3) * (cellData.r + cellData.q / 2);
         mesh.position.set(x, 0, z);
+        mesh.rotation.y = Math.PI / 2;
         // console.warn('Created Hex Mesh:', mesh); // 打印网格信息
         return mesh;
     }

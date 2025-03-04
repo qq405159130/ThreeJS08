@@ -3,12 +3,15 @@ import { HexCellView } from './HexCellView';
 import { EventManager } from '../utils/EventManager';
 import { ServiceManager } from '@/utils/ServiceManager';
 import { MyCameraControls } from '@/MyCameraControls';
+import { HexCellHoverEffectManager } from './HexCellHoverEffectManager';
 
 export class HexGridInteractSystem {
     private raycaster: THREE.Raycaster = new THREE.Raycaster(); // 光线投射器
     private mouse: THREE.Vector2 = new THREE.Vector2(); // 鼠标位置
     private hoveredCell: HexCellView | null = null; // 当前悬停的单元格
     private eventManager: EventManager;
+
+    private hoverEffectManager: HexCellHoverEffectManager = new HexCellHoverEffectManager();
 
     constructor(
         private scene: THREE.Scene,
@@ -18,6 +21,10 @@ export class HexGridInteractSystem {
     ) {
         this.eventManager = eventManager;
         this.init();
+    }
+
+    public dispose(): void {
+        this.hoverEffectManager.dispose();
     }
 
     // 初始化
@@ -93,11 +100,13 @@ export class HexGridInteractSystem {
     // 处理悬停事件
     private handleCellHover(cell: HexCellView): void {
         console.warn(`Cell hovered: (${cell.q}, ${cell.r})`);
+        this.hoverEffectManager.showHoverEffect(cell.mesh);
     }
 
     // 处理悬停结束事件
     private handleCellHoverEnd(cell: HexCellView): void {
         console.warn(`Cell hover ended: (${cell.q}, ${cell.r})`);
+        this.hoverEffectManager.hideHoverEffect();
     }
 
     // 处理点击事件
