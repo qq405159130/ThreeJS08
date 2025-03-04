@@ -31,8 +31,12 @@ export class HexCellViewMgr {
         const geometry = MapViewUtils.getHexGeometry();
         const material = MapViewUtils.getMaterial(terrainType);
         // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        // const instancedMesh = new THREE.InstancedMesh(geometry, material, 1000); // 1000 个实例
         const mesh = new THREE.Mesh(geometry, material);
         // mesh.renderOrder = 1; // 设置一个较高的渲染顺序
+        mesh.name = 'hexcellview';
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
 
         const x = 1.5 * q;
         const z = Math.sqrt(3) * (r + q / 2);
