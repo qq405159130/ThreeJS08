@@ -89,7 +89,7 @@ export class HexGridInteractSystem {
         // 检测与网格的交互
         const views = Array.from(this.cellViews.values());
         const intersects = this.raycaster.intersectObjects(views.map(cell => cell.mesh));
-        console.warn(`hover     views:${views.length}       intersects:${intersects.length}    this.scene.children.length: ${this.scene.children.length}`);
+        Config.isLogInterative && console.warn(`hover     views:${views.length}       intersects:${intersects.length}    this.scene.children.length: ${this.scene.children.length}`);
         if (intersects.length > 0) {
             const intersectedCell = views.find(cell => cell.mesh === intersects[0].object);
             if (intersectedCell && intersectedCell !== this.hoveredCell) {
@@ -128,13 +128,13 @@ export class HexGridInteractSystem {
 
     // 处理悬停事件
     private handleCellHover(cell: HexCellView): void {
-        console.warn(`Cell hovered: (${cell.q}, ${cell.r})`);
+        Config.isLogInterative && console.warn(`Cell hovered: (${cell.q}, ${cell.r})`);
         this.hoverEffectManager.showHoverEffect(cell.mesh);
     }
 
     // 处理悬停结束事件
     private handleCellHoverEnd(cell: HexCellView): void {
-        console.warn(`Cell hover ended: (${cell.q}, ${cell.r})`);
+        Config.isLogInterative && console.warn(`Cell hover ended: (${cell.q}, ${cell.r})`);
         this.hoverEffectManager.hideHoverEffect();
     }
 
