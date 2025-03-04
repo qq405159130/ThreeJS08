@@ -5,8 +5,8 @@ import {
     eTerrain, eTerrainFace, eHeightLevel, eHumidityLevel, eBuild, eResource
 } from './enums';
 import type { MapInfo, HexCellData } from './types';
-import { HexCellView } from '@/terrain_interact/HexCellView';
 import { ServiceManager } from '@/utils/ServiceManager';
+import { NoiseTextureLoader } from './NoiseTextureLoader';
 
 export class MapGenerator {
     private get cellDatas(): Map<string, HexCell> {
@@ -49,18 +49,22 @@ export class MapGenerator {
     }
 
     private async generateHeightMap(): Promise<void> {
-        const noiseGen = new NoiseGenerator();
         const width = this.mapInfo.width;
         const height = this.mapInfo.height;
-
-        const noiseMap = noiseGen.generateNoiseMap(
-            width,
-            height,
-            0.1, // scale
-            6,   // octaves
-            0.5, // persistence
-            2.0  // lacunarity
-        );
+        
+        // const noiseGen = new NoiseGenerator();
+        // const noiseMap = noiseGen.generateNoiseMap(
+        //     width,
+        //     height,
+        //     0.1, // scale
+        //     6,   // octaves
+        //     0.5, // persistence
+        //     2.0  // lacunarity
+        // );
+        const noiseGen = new NoiseTextureLoader();
+        await noiseGen.loadNoiseTexture('../texture/noise.png');
+        const noiseMap = noiseGen.generateNoiseMap(width, height);
+        // console.error("noiseMap : " + noiseMap);
 
         // 计算高度等级阈值
         const sortedHeights = [...noiseMap].sort((a, b) => a - b);

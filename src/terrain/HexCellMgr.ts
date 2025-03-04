@@ -25,7 +25,7 @@ export class HexCellMgr {
             cell.data.isBridge = data.isBridge;
             cell.data.isRoad = data.isRoad;
         }
-        console.warn("addOrUpdateCell  ID: " + this.ID);
+        // console.warn("addOrUpdateCell  ID: " + this.ID);
         this.ID++;
         return cell;
     }
