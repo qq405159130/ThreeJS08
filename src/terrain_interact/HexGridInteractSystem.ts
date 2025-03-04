@@ -4,6 +4,7 @@ import { EventManager } from '../utils/EventManager';
 import { ServiceManager } from '@/utils/ServiceManager';
 import { MyCameraControls } from '@/MyCameraControls';
 import { HexCellHoverEffectManager } from './HexCellHoverEffectManager';
+import { Config } from '@/config';
 
 export class HexGridInteractSystem {
     private raycaster: THREE.Raycaster = new THREE.Raycaster(); // 光线投射器
@@ -47,6 +48,35 @@ export class HexGridInteractSystem {
     private get cellViews(): Map<string, HexCellView> {
         return ServiceManager.getInstance().getHexCellViewMgr().getCellViews();
     }
+
+    // private onMouseMove(event: MouseEvent): void {
+    //     // 将鼠标位置归一化为设备坐标（-1到+1）
+    //     this.mouse.x = MyCameraControls.isPointerLocked ? 0 : (event.clientX / window.innerWidth) * 2 - 1;
+    //     this.mouse.y = MyCameraControls.isPointerLocked ? 0 : -(event.clientY / window.innerHeight) * 2 + 1;
+    //     this.raycaster.setFromCamera(this.mouse, this.camera);
+
+    //     if (Config.useInstancedMesh) {
+    //         // 处理 InstancedMesh 的交互
+    //         const intersects = this.raycaster.intersectObjects(this.scene.children);
+    //         if (intersects.length > 0 && intersects[0].instanceId !== undefined) {
+    //             console.warn('Hovered instance:', intersects[0].instanceId);
+    //         }
+    //         else{
+    //             console.warn('Hovered none:  this.scene.children ' + this.scene.children.length);
+    //         }
+    //     } else {
+    //         // 处理普通 Mesh 的交互
+    //         const meshs = ServiceManager.getInstance().getHexCellViewMgr().getAllMeshs();
+    //         const intersects = this.raycaster.intersectObjects(meshs);
+    //         if (intersects.length > 0) {
+    //             const cell = intersects[0].object.userData;
+    //             console.warn('Hovered cell:', cell.q, cell.r);
+    //         }
+    //         else{
+    //             console.warn('Hovered none:    meshs ' + meshs.length);
+    //         }
+    //     }
+    // }
 
     // 处理鼠标移动事件
     private onMouseMove(event: MouseEvent): void {

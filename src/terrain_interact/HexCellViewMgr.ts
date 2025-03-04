@@ -4,23 +4,21 @@ import { EventManager } from '../utils/EventManager';
 import { HexCellData } from '@/terrain/types';
 import { MapViewUtils } from '../terrain_view/MapViewUtils';
 import { eTerrain } from '@/terrain/enums';
+// import { HexCellRenderer } from '../terrain_view/HexCellRenderer';
+import { ServiceManager } from '@/utils/ServiceManager';
+import { Config } from '@/config';
+
 
 export class HexCellViewMgr {
     private scene: THREE.Scene;
-    private camera: THREE.PerspectiveCamera;
-    private renderer: THREE.WebGLRenderer;
     private cellViews: Map<string, HexCellView> = new Map();
-    private eventManager: EventManager;
 
-    public getCellViews(): Map<string, HexCellView> {
-        return this.cellViews;
-    }
+    // private renderer: HexCellRenderer;
 
-    constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, eventManager: EventManager) {
+    constructor(scene: THREE.Scene) {
         this.scene = scene;
-        this.camera = camera;
-        this.renderer = renderer;
-        this.eventManager = eventManager;
+
+        // this.renderer = new HexCellRenderer(scene);
     }
 
     /**
@@ -47,18 +45,23 @@ export class HexCellViewMgr {
     }
 
     // 添加或更新单元格视图
-    public addOrUpdateCellView(q: number, r: number, cellData: HexCellData): HexCellView {
+    public addOrUpdateCellView(q: number, r: number, cellData: HexCellData): void {
+        const eventManager = ServiceManager.getInstance().getEventManager();
         const key = `${q},${r}`;
         let cellView = this.cellViews.get(key);
         if (!cellView) {
             const mesh = this.createHexMesh(q, r, cellData.terrainType);
             cellView = new HexCellView(q, r, mesh);
-            cellView.init(this.eventManager);
+            cellView.init(eventManager);
             this.cellViews.set(key, cellView);
             this.scene.add(cellView.mesh);
+            console.warn(" scene添加物体！");
         }
-        return cellView;
+
+        // const color = MapViewUtils.getColor(cellData.terrainType);
+        // this.renderer.addCell(q, r, color);
     }
+
 
     // 获取单元格视图
     public getCellView(q: number, r: number): HexCellView | undefined {
@@ -70,8 +73,21 @@ export class HexCellViewMgr {
         return Array.from(this.cellViews.values());
     }
 
+    public getCellViews(): Map<string, HexCellView> {
+        return this.cellViews;
+    }
+
+    public getAllMeshs(): THREE.Mesh[] {
+        return Array.from(this.cellViews.values()).map((cellView: HexCellView) => {
+            return cellView.mesh;
+        });
+        // return this.renderer.getMeshs();
+    }
+
     // 清除所有单元格视图
     public clear(): void {
         this.cellViews.clear();
+
+        // this.renderer.clear();
     }
 }

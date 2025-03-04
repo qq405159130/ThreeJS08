@@ -16,7 +16,7 @@ export class MapMainConstructor {
     constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, mapInfo: MapInfo) {
         this.eventManager = new EventManager();
         this.hexCellMgr = new HexCellMgr();
-        this.hexCellViewMgr = new HexCellViewMgr(scene, camera, renderer, this.eventManager);
+        this.hexCellViewMgr = new HexCellViewMgr(scene);
         this.mapGenerator = new MapGenerator(mapInfo);
         this.hexGridInteractSystem = new HexGridInteractSystem(scene, camera, renderer, this.eventManager);
     }
