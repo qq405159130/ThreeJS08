@@ -1,4 +1,4 @@
-export function logExecutionTime(title: string) {
+export function logExecutionTime(title?: string) {
     return function (
         target: any,
         propertyKey: string,
@@ -9,17 +9,18 @@ export function logExecutionTime(title: string) {
             descriptor.value = function (...args: any[]) {
                 const start = performance.now();
                 const result = originalMethod.apply(this, args); // 调用原始方法
+                const logTitle = title || "Method"; // 如果未传递 title，使用默认值 "Method"
                 if (result instanceof Promise) {
                     // 如果是异步函数，等待 Promise 完成
                     return result.then((res) => {
                         const end = performance.now();
-                        console.log(`${title} - ${propertyKey} executed in ${(end - start).toFixed(2)}ms`);
+                        console.log(`${logTitle} - ${propertyKey} executed in ${(end - start).toFixed(2)}ms`);
                         return res;
                     });
                 } else {
                     // 如果是同步函数，直接记录时间
                     const end = performance.now();
-                    console.log(`${title} - ${propertyKey} executed in ${(end - start).toFixed(2)}ms`);
+                    console.log(`${logTitle} - ${propertyKey} executed in ${(end - start).toFixed(2)}ms`);
                     return result;
                 }
             };

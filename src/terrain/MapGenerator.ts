@@ -36,7 +36,7 @@ export class MapGenerator {
         });
     }
 
-    @logExecutionTime
+    @logExecutionTime("生成地图")
     public async generateMap(): Promise<HexCellData[]> {
 
         this.initializeGrid();
@@ -51,7 +51,10 @@ export class MapGenerator {
         return Array.from(this.cellDatas.values()).map(cell => cell.data);
     }
 
-    @logExecutionTime
+    /** Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 3 arguments, but the decorator expects 1.ts(1241)
+Decorator function return type '(target: any, propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor' is not assignable to type 'void | TypedPropertyDescriptor<() => Promise<void>>'.ts(1270) */
+    @logExecutionTime("生成高度图")
     private async generateHeightMap(): Promise<void> {
         const width = this.mapInfo.width;
         const height = this.mapInfo.height;
@@ -110,7 +113,7 @@ export class MapGenerator {
         });
     }
 
-    @logExecutionTime
+    @logExecutionTime()
     private async classifyTerrain(): Promise<void> {
         this.cellDatas.forEach(cell => {
             const { heightLevel, height } = cell.data;
@@ -140,7 +143,7 @@ export class MapGenerator {
         });
     }
 
-    @logExecutionTime
+    @logExecutionTime()
     private async generateRivers(): Promise<void> {
         const mountainCells = Array.from(this.cellDatas.values()).filter(
             cell => cell.data.terrainType === eTerrain.HighMountain
@@ -153,7 +156,7 @@ export class MapGenerator {
         });
     }
 
-    @logExecutionTime
+    @logExecutionTime()
     private async generateRiverFromCell(startCell: HexCell): Promise<void> {
         let currentCell = startCell;
         const visitedCells = new Set<string>(); // 记录已经访问过的单元格
@@ -199,7 +202,7 @@ export class MapGenerator {
 
     }
 
-    @logExecutionTime
+    @logExecutionTime()
     private async generateClimate(): Promise<void> {
         const { width, height } = this.mapInfo;
         const latitudeBands = 5; // 将地图分为5个纬度带
@@ -234,7 +237,7 @@ export class MapGenerator {
         });
     }
 
-    @logExecutionTime
+    @logExecutionTime()
     private async generateTerrainFace(): Promise<void> {
         this.cellDatas.forEach(cell => {
             const { terrainType, humidityLevel, heightLevel } = cell.data;
@@ -266,7 +269,7 @@ export class MapGenerator {
         });
     }
 
-    @logExecutionTime
+    @logExecutionTime()
     private async generateResources(): Promise<void> {
         this.cellDatas.forEach(cell => {
             const { terrainFaceType } = cell.data;
@@ -291,7 +294,7 @@ export class MapGenerator {
         });
     }
 
-    @logExecutionTime
+    @logExecutionTime()
     private async generateCities(): Promise<void> {
         const plainCells = Array.from(this.cellDatas.values()).filter(
             cell => cell.data.terrainType === eTerrain.Plain && cell.data.riverLevel > 0
