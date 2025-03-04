@@ -113,7 +113,7 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
         });
     }
 
-    @logExecutionTime()
+    @logExecutionTime("生成地形")
     private async classifyTerrain(): Promise<void> {
         this.cellDatas.forEach(cell => {
             const { heightLevel, height } = cell.data;
@@ -143,7 +143,7 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
         });
     }
 
-    @logExecutionTime()
+    @logExecutionTime("生成河流")
     private async generateRivers(): Promise<void> {
         const mountainCells = Array.from(this.cellDatas.values()).filter(
             cell => cell.data.terrainType === eTerrain.HighMountain
@@ -156,7 +156,7 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
         });
     }
 
-    @logExecutionTime()
+    @logExecutionTime("生成一条河流")
     private async generateRiverFromCell(startCell: HexCell): Promise<void> {
         let currentCell = startCell;
         const visitedCells = new Set<string>(); // 记录已经访问过的单元格
@@ -202,7 +202,7 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
 
     }
 
-    @logExecutionTime()
+    @logExecutionTime("生成气候带")
     private async generateClimate(): Promise<void> {
         const { width, height } = this.mapInfo;
         const latitudeBands = 5; // 将地图分为5个纬度带
@@ -237,7 +237,7 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
         });
     }
 
-    @logExecutionTime()
+    @logExecutionTime("生成地貌")
     private async generateTerrainFace(): Promise<void> {
         this.cellDatas.forEach(cell => {
             const { terrainType, humidityLevel, heightLevel } = cell.data;
@@ -269,7 +269,7 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
         });
     }
 
-    @logExecutionTime()
+    @logExecutionTime("生成资源")
     private async generateResources(): Promise<void> {
         this.cellDatas.forEach(cell => {
             const { terrainFaceType } = cell.data;
@@ -294,7 +294,7 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
         });
     }
 
-    @logExecutionTime()
+    @logExecutionTime("生成城市")
     private async generateCities(): Promise<void> {
         const plainCells = Array.from(this.cellDatas.values()).filter(
             cell => cell.data.terrainType === eTerrain.Plain && cell.data.riverLevel > 0
