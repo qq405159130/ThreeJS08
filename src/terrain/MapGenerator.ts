@@ -79,7 +79,10 @@ export class MapGenerator {
         const noiseGen = new NoiseTextureLoader();
         //当前时间戳
         this.preTimestamp = Date.now();
-        await noiseGen.loadNoiseTexture('../texture/noise.png');
+        const noisePath = process.env.NODE_ENV === 'production' ? '/noise.png' : '../public/noise.png';
+        await noiseGen.loadNoiseTexture(noisePath);
+        // await noiseGen.loadNoiseTexture('../public/noise.png');//本地能加载成功。
+        // await noiseGen.loadNoiseTexture('/noise.png');//本地也加载失败了；
         //打印用时
         console.warn("加载噪声图片，用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
         this.preTimestamp = Date.now();
@@ -164,34 +167,34 @@ export class MapGenerator {
         const visitedCells = new Set<string>(); // 记录已经访问过的单元格
         const maxIterations = 100; // 最大迭代次数，防止无限循环
         let iterations = 0;
-    
+
         while (currentCell.data.terrainType !== eTerrain.Ocean && iterations < maxIterations) {
             // 标记当前单元格为河流
             currentCell.data.riverLevel = 1;
-    
+
             // 记录当前单元格已被访问
             visitedCells.add(`${currentCell.data.q},${currentCell.data.r}`);
-    
+
             // 获取当前单元格的邻居单元格
             const neighbors = HexGridUtils.getNeighbors(currentCell.data.q, currentCell.data.r)
                 .map(coord => this.cellDatas.get(`${coord.q},${coord.r}`))
                 .filter(Boolean) as HexCell[];
-    
+
             // 找到高度最低的邻居单元格
             let nextCell = neighbors.reduce((lowest, cell) =>
                 cell.data.height < lowest.data.height ? cell : lowest
             );
-    
+
             // 检查是否到达局部最低点
             if (nextCell.data.height >= currentCell.data.height) {
                 break; // 没有更低的地形，停止生成河流
             }
-    
+
             // 检查是否进入环形区域
             if (visitedCells.has(`${nextCell.data.q},${nextCell.data.r}`)) {
                 break; // 已经访问过该单元格，停止生成河流
             }
-    
+
             // 更新当前单元格
             currentCell = nextCell;
             iterations++;
@@ -201,7 +204,7 @@ export class MapGenerator {
                 break;
             }
         }
-    
+
     }
 
     private async generateClimate(): Promise<void> {
