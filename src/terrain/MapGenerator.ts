@@ -161,19 +161,47 @@ export class MapGenerator {
 
     private async generateRiverFromCell(startCell: HexCell): Promise<void> {
         let currentCell = startCell;
-        while (currentCell.data.terrainType !== eTerrain.Ocean) {
+        const visitedCells = new Set<string>(); // 记录已经访问过的单元格
+        const maxIterations = 100; // 最大迭代次数，防止无限循环
+        let iterations = 0;
+    
+        while (currentCell.data.terrainType !== eTerrain.Ocean && iterations < maxIterations) {
+            // 标记当前单元格为河流
             currentCell.data.riverLevel = 1;
+    
+            // 记录当前单元格已被访问
+            visitedCells.add(`${currentCell.data.q},${currentCell.data.r}`);
+    
+            // 获取当前单元格的邻居单元格
             const neighbors = HexGridUtils.getNeighbors(currentCell.data.q, currentCell.data.r)
                 .map(coord => this.cellDatas.get(`${coord.q},${coord.r}`))
                 .filter(Boolean) as HexCell[];
-
-            const nextCell = neighbors.reduce((lowest, cell) =>
+    
+            // 找到高度最低的邻居单元格
+            let nextCell = neighbors.reduce((lowest, cell) =>
                 cell.data.height < lowest.data.height ? cell : lowest
             );
-
-            if (nextCell === currentCell) break; // 没有更低的地形
+    
+            // 检查是否到达局部最低点
+            if (nextCell.data.height >= currentCell.data.height) {
+                break; // 没有更低的地形，停止生成河流
+            }
+    
+            // 检查是否进入环形区域
+            if (visitedCells.has(`${nextCell.data.q},${nextCell.data.r}`)) {
+                break; // 已经访问过该单元格，停止生成河流
+            }
+    
+            // 更新当前单元格
             currentCell = nextCell;
+            iterations++;
+            // 如果达到最大迭代次数，记录警告
+            if (iterations >= maxIterations) {
+                console.warn('River generation reached max iterations. Possible infinite loop.');
+                break;
+            }
         }
+    
     }
 
     private async generateClimate(): Promise<void> {
