@@ -26,8 +26,8 @@ export class ServiceManager {
 
         // 地图生成参数
         const mapInfo: MapInfo = {
-            width: 5,
-            height: 2,
+            width: 15,
+            height: 15,
             oceanRatio: 0.3,
             mountainRatio: 0.15,
             forestRatio: 0.2,

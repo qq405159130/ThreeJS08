@@ -1,7 +1,6 @@
 // game/src/map/MapRenderer.ts
 import * as THREE from 'three';
 import { HexCellData } from '../terrain/types';
-import { MapMaterialSystem } from './MapMaterialSystem';
 import { MapDynamicLoadingSystem } from './MapDynamicLoadingSystem';
 import { MapLODSystem } from './MapLODSystem';
 import { MapGenerator } from '@/terrain/MapGenerator';
@@ -12,7 +11,6 @@ export class MapRenderer {
     private scene: THREE.Scene;
     private camera: THREE.PerspectiveCamera;
     private renderer: THREE.WebGLRenderer;
-    private terrainMaterialSystem: MapMaterialSystem;
     private dynamicLoadingSystem: MapDynamicLoadingSystem;
     private lodSystem: MapLODSystem;
 
@@ -22,7 +20,6 @@ export class MapRenderer {
         this.renderer = renderer;
 
         // 初始化子系统
-        this.terrainMaterialSystem = new MapMaterialSystem();
         this.dynamicLoadingSystem = new MapDynamicLoadingSystem(scene);
         this.lodSystem = new MapLODSystem(scene, camera);
     }

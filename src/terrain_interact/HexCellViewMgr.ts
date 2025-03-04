@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { HexCellView } from './HexCellView';
 import { EventManager } from '../utils/EventManager';
 import { HexCellData } from '@/terrain/types';
+import { MapViewUtils } from '../terrain_view/MapViewUtils';
+import { eTerrain } from '@/terrain/enums';
 
 export class HexCellViewMgr {
     private scene: THREE.Scene;
@@ -25,10 +27,10 @@ export class HexCellViewMgr {
      * 创建六边形网格
      * @returns 六边形网格
      */
-    private createHexMesh(q: number, r: number, material?: THREE.MeshBasicMaterial): THREE.Mesh {
-        const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 6);
-        // material ? material :this.terrainMaterialSystem.getMaterial(cell.terrainType);
-        material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    private createHexMesh(q: number, r: number, terrainType: eTerrain): THREE.Mesh {
+        const geometry = MapViewUtils.getHexGeometry();
+        const material = MapViewUtils.getMaterial(terrainType);
+        // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         const mesh = new THREE.Mesh(geometry, material);
         // mesh.renderOrder = 1; // 设置一个较高的渲染顺序
 
@@ -45,7 +47,7 @@ export class HexCellViewMgr {
         const key = `${q},${r}`;
         let cellView = this.cellViews.get(key);
         if (!cellView) {
-            const mesh = this.createHexMesh(q, r);
+            const mesh = this.createHexMesh(q, r, cellData.terrainType);
             cellView = new HexCellView(q, r, mesh);
             cellView.init(this.eventManager);
             this.cellViews.set(key, cellView);
