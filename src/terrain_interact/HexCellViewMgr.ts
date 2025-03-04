@@ -10,8 +10,7 @@ export class HexCellViewMgr {
     private cellViews: Map<string, HexCellView> = new Map();
     private eventManager: EventManager;
 
-    public getCellViews(): Map<string, HexCellView>
-    {
+    public getCellViews(): Map<string, HexCellView> {
         return this.cellViews;
     }
 
@@ -22,12 +21,32 @@ export class HexCellViewMgr {
         this.eventManager = eventManager;
     }
 
+    /**
+     * 创建六边形网格
+     * @returns 六边形网格
+     */
+    private createHexMesh(q: number, r: number, material?: THREE.MeshBasicMaterial): THREE.Mesh {
+        const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 6);
+        // material ? material :this.terrainMaterialSystem.getMaterial(cell.terrainType);
+        material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const mesh = new THREE.Mesh(geometry, material);
+        // mesh.renderOrder = 1; // 设置一个较高的渲染顺序
+
+        const x = 1.5 * q;
+        const z = Math.sqrt(3) * (r + q / 2);
+        mesh.position.set(x, 0, z);
+        mesh.rotation.y = Math.PI / 2;
+        // console.warn('Created Hex Mesh:', mesh); // 打印网格信息
+        return mesh;
+    }
+
     // 添加或更新单元格视图
     public addOrUpdateCellView(q: number, r: number, cellData: HexCellData): HexCellView {
         const key = `${q},${r}`;
         let cellView = this.cellViews.get(key);
         if (!cellView) {
-            cellView = new HexCellView(q, r, cellData);
+            const mesh = this.createHexMesh(q, r);
+            cellView = new HexCellView(q, r, mesh);
             cellView.init(this.eventManager);
             this.cellViews.set(key, cellView);
             this.scene.add(cellView.mesh);

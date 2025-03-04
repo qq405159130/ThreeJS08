@@ -10,29 +10,11 @@ export class HexCellView {
 
     private eventManager?: EventManager;
 
-    constructor(public q: number, public r: number, cellData: HexCellData) {
-        this.mesh = this.createHexMesh(cellData);
+    constructor(public q: number, public r: number, mesh: THREE.Mesh) {
+        this.mesh = mesh;
     }
 
-    /**
-     * 创建六边形网格
-     * @param cellData 六边形单元格数据
-     * @returns 六边形网格
-     */
-    private createHexMesh(cellData: HexCellData): THREE.Mesh {
-        const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 6);
-        // const material = this.terrainMaterialSystem.getMaterial(cell.terrainType);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const mesh = new THREE.Mesh(geometry, material);
-        // mesh.renderOrder = 1; // 设置一个较高的渲染顺序
 
-        const x = 1.5 * cellData.q;
-        const z = Math.sqrt(3) * (cellData.r + cellData.q / 2);
-        mesh.position.set(x, 0, z);
-        mesh.rotation.y = Math.PI / 2;
-        // console.warn('Created Hex Mesh:', mesh); // 打印网格信息
-        return mesh;
-    }
 
     public init(eventManager: EventManager) {
         this.eventManager = eventManager;
