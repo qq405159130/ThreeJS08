@@ -15,6 +15,8 @@ export class MapGenerator {
     private mapInfo: MapInfo;
     private heightThresholds: { height1: number; height2: number; height3: number; height4: number };
 
+    private preTimestamp: number = 0;
+
     constructor(mapInfo: MapInfo) {
         this.mapInfo = mapInfo;
         this.heightThresholds = { height1: 0, height2: 0, height3: 0, height4: 0 };
@@ -38,20 +40,33 @@ export class MapGenerator {
         this.initializeGrid();
 
         await this.generateHeightMap();
-        this.classifyTerrain();
-        this.generateRivers();
-        this.generateClimate();
-        this.generateTerrainFace();
-        this.generateResources();
-        this.generateCities();
-
+        console.warn("01 generateHeightMap 用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
+        this.preTimestamp = Date.now();
+        await this.classifyTerrain();
+        console.warn("02 classifyTerrain 用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
+        this.preTimestamp = Date.now();
+        await this.generateRivers();
+        console.warn("03 generateRivers 用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
+        this.preTimestamp = Date.now();
+        await this.generateClimate();
+        console.warn("04 generateClimate 用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
+        this.preTimestamp = Date.now();
+        await this.generateTerrainFace();
+        console.warn("05 generateTerrainFace 用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
+        this.preTimestamp = Date.now();
+        await this.generateResources();
+        console.warn("06 generateResources 用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
+        this.preTimestamp = Date.now();
+        await this.generateCities();
+        console.warn("07 generateCities 用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
+        this.preTimestamp = Date.now();
         return Array.from(this.cellDatas.values()).map(cell => cell.data);
     }
 
     private async generateHeightMap(): Promise<void> {
         const width = this.mapInfo.width;
         const height = this.mapInfo.height;
-        
+
         // const noiseGen = new NoiseGenerator();
         // const noiseMap = noiseGen.generateNoiseMap(
         //     width,
@@ -62,8 +77,16 @@ export class MapGenerator {
         //     2.0  // lacunarity
         // );
         const noiseGen = new NoiseTextureLoader();
+        //当前时间戳
+        this.preTimestamp = Date.now();
         await noiseGen.loadNoiseTexture('../texture/noise.png');
-        const noiseMap = noiseGen.generateNoiseMap(width, height);
+        //打印用时
+        console.warn("加载噪声图片，用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
+        this.preTimestamp = Date.now();
+        const noiseMap = await noiseGen.generateNoiseMap(width, height);
+        console.warn("生成噪声图，用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
+        this.preTimestamp = Date.now();
+
         // console.error("noiseMap : " + noiseMap);
 
         // 计算高度等级阈值
@@ -95,7 +118,7 @@ export class MapGenerator {
         });
     }
 
-    private classifyTerrain(): void {
+    private async classifyTerrain(): Promise<void> {
         this.cellDatas.forEach(cell => {
             const { heightLevel, height } = cell.data;
             let terrain: eTerrain;
@@ -124,7 +147,7 @@ export class MapGenerator {
         });
     }
 
-    private generateRivers(): void {
+    private async generateRivers(): Promise<void> {
         const mountainCells = Array.from(this.cellDatas.values()).filter(
             cell => cell.data.terrainType === eTerrain.HighMountain
         );
@@ -136,7 +159,7 @@ export class MapGenerator {
         });
     }
 
-    private generateRiverFromCell(startCell: HexCell): void {
+    private async generateRiverFromCell(startCell: HexCell): Promise<void> {
         let currentCell = startCell;
         while (currentCell.data.terrainType !== eTerrain.Ocean) {
             currentCell.data.riverLevel = 1;
@@ -153,7 +176,7 @@ export class MapGenerator {
         }
     }
 
-    private generateClimate(): void {
+    private async generateClimate(): Promise<void> {
         const { width, height } = this.mapInfo;
         const latitudeBands = 5; // 将地图分为5个纬度带
 
@@ -187,7 +210,7 @@ export class MapGenerator {
         });
     }
 
-    private generateTerrainFace(): void {
+    private async generateTerrainFace(): Promise<void> {
         this.cellDatas.forEach(cell => {
             const { terrainType, humidityLevel, heightLevel } = cell.data;
             let face: eTerrainFace;
@@ -218,7 +241,7 @@ export class MapGenerator {
         });
     }
 
-    private generateResources(): void {
+    private async generateResources(): Promise<void> {
         this.cellDatas.forEach(cell => {
             const { terrainFaceType } = cell.data;
             let resource: eResource | null = null;
@@ -242,7 +265,7 @@ export class MapGenerator {
         });
     }
 
-    private generateCities(): void {
+    private async generateCities(): Promise<void> {
         const plainCells = Array.from(this.cellDatas.values()).filter(
             cell => cell.data.terrainType === eTerrain.Plain && cell.data.riverLevel > 0
         );
