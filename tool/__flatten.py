@@ -45,21 +45,23 @@ def flatten_and_save_structure(root_folder, src_relative, dest_relative, structu
             # 遍历 src 文件夹
             for root, dirs, files in os.walk(src_folder):
                 for file in files:
-                    file_path = os.path.join(root, file)
-                    # 写入文件名作为分隔符
-                    all_code.write(f"\n\n// === File: {file} ===\n\n")
-                    # 写入文件内容
-                    with open(file_path, 'r', encoding='utf-8') as src_file:
-                        all_code.write(src_file.read())
+                    if file.endswith(('.ts', '.tsx', '.css', '.html', '.js')):
+                        file_path = os.path.join(root, file)
+                        # 写入文件名作为分隔符
+                        all_code.write(f"\n\n// === File: {file} ===\n\n")
+                        # 写入文件内容
+                        with open(file_path, 'r', encoding='utf-8') as src_file:
+                            all_code.write(src_file.read())
 
     # 复制文件到目标文件夹
     for root, dirs, files in os.walk(src_folder):
         for file in files:
-            src_file_path = os.path.join(root, file)
-            dest_file_path = os.path.join(dest_folder, file)
+            if file.endswith(('.ts', '.tsx', '.css', '.html', '.js')):
+                src_file_path = os.path.join(root, file)
+                dest_file_path = os.path.join(dest_folder, file)
 
-            # 直接覆盖文件
-            shutil.copy2(src_file_path, dest_file_path)
+                # 直接覆盖文件
+                shutil.copy2(src_file_path, dest_file_path)
 
     print(f"所有文件已复制到: {dest_folder}")
     print(f"目录结构已保存到: {structure_file}")
@@ -91,6 +93,35 @@ def merge_game_files(root_folder, game_relative, dest_relative):
 
     print(f"特定文件已合并到: {merged_file}")
 
+def save_public_structure(root_folder, public_relative, structure_relative):
+    # 构建完整路径
+    public_folder = os.path.join(root_folder, public_relative)
+    structure_file = os.path.join(root_folder, structure_relative)
+
+    # 打开文件以保存目录结构
+    with open(structure_file, 'w', encoding='utf-8') as f:
+        # 递归遍历目录并生成树形结构
+        def write_tree(directory, prefix=""):
+            # 获取目录下的所有文件和文件夹
+            entries = os.listdir(directory)
+            entries.sort()  # 按名称排序
+            for i, entry in enumerate(entries):
+                full_path = os.path.join(directory, entry)
+                is_last = (i == len(entries) - 1)  # 是否是最后一个条目
+
+                # 写入当前条目
+                f.write(f"{prefix}{'└── ' if is_last else '├── '}{entry}\n")
+
+                # 如果是文件夹，递归处理
+                if os.path.isdir(full_path):
+                    write_tree(full_path, prefix + ("    " if is_last else "│   "))
+
+        # 写入树形结构
+        f.write(f"{public_folder}\n")  # 使用完整路径
+        write_tree(public_folder)
+
+    print(f"public目录结构已保存到: {structure_file}")
+
 def show_options():
     # 创建Tkinter根窗口
     root = tk.Tk()
@@ -98,11 +129,11 @@ def show_options():
 
     # 显示功能说明和选项
     print("本脚本的子功能如下：\n"
-          "① 复制game/src目录的文件结构；（所有文件）\n"
-          "② 扁平化复制game/src目录的文件；（只考虑.ts、.tsx、.css、.html、.js文件，其他略过）\n"
-          "③ 合并复制game/src目录的文件；（只考虑.ts、.tsx、.css、.html、.js文件，其他略过） \n"
+          "① 复制game/src目录的文件结构；（所有文件，并生成 __src_directory.txt 文件）\n"
+          "② 扁平化复制game/src目录的文件；（只考虑.ts、.tsx、.css、.html、.js文件，其他略过，并生成 __flattened 文件夹）\n"
+          "③ 合并复制game/src目录的文件；（只考虑.ts、.tsx、.css、.html、.js文件，其他略过，并生成 __src_allCode.txt 文件）\n"
           "④ 合并复制game目录下这几个文件为__threejs_env: index.html, package.json, tsconfig.json, vite.config.ts；（注意要做文件判空）\n"
-		  "⑤ 复制game/public目录的文件结构，放置在 __public__directory.txt 里 \n"
+          "⑤ 复制game/public目录的文件结构，放置在 __public_directory.txt 里 \n"
           "\n\n"
           "现在，你可以输入这些选项来执行特定子功能的组合\n"
           "1. 默认功能：所有子功能\n"
@@ -120,16 +151,20 @@ def show_options():
     dest_relative = "__flattened"  # 目标文件夹相对于根文件夹的路径
     structure_relative = "__flattened/__src_directory.txt"  # 目录结构文件相对于根文件夹的路径
     game_relative = "game"  # game 文件夹相对于根文件夹的路径
+    public_relative = "game/public"  # public 文件夹相对于根文件夹的路径
+    public_structure_relative = "__flattened/__public_directory.txt"  # public目录结构文件相对于根文件夹的路径
 
     # 根据用户输入执行相应功能
     if user_input == "":
         # 默认功能：合并文件
         flatten_and_save_structure(root_folder, src_relative, dest_relative, structure_relative, merge_files=True)
         merge_game_files(root_folder, game_relative, dest_relative)
+        save_public_structure(root_folder, public_relative, public_structure_relative)
     elif user_input == "1":
         # 选项1：不合并文件
         flatten_and_save_structure(root_folder, src_relative, dest_relative, structure_relative, merge_files=False)
         merge_game_files(root_folder, game_relative, dest_relative)
+        save_public_structure(root_folder, public_relative, public_structure_relative)
     elif user_input == "2":
         # 选项2：仅输出目录结构和合并后的代码
         # 删除目标文件夹（如果存在）
@@ -156,12 +191,14 @@ def show_options():
         with open(all_code_file, 'w', encoding='utf-8') as all_code:
             for root, dirs, files in os.walk(src_relative):
                 for file in files:
-                    file_path = os.path.join(root, file)
-                    all_code.write(f"\n\n// === File: {file} ===\n\n")
-                    with open(file_path, 'r', encoding='utf-8') as src_file:
-                        all_code.write(src_file.read())
+                    if file.endswith(('.ts', '.tsx', '.css', '.html', '.js')):
+                        file_path = os.path.join(root, file)
+                        all_code.write(f"\n\n// === File: {file} ===\n\n")
+                        with open(file_path, 'r', encoding='utf-8') as src_file:
+                            all_code.write(src_file.read())
 
         merge_game_files(root_folder, game_relative, dest_relative)
+        save_public_structure(root_folder, public_relative, public_structure_relative)
 
         print(f"目录结构已保存到: {structure_relative}")
         print(f"所有文件内容已合并到: {all_code_file}")
@@ -169,4 +206,4 @@ def show_options():
         print("无效的选项，程序退出。")
 
 if __name__ == "__main__":
-    show_options()	
+    show_options()
