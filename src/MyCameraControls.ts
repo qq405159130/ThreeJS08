@@ -11,12 +11,12 @@ export class MyCameraControls {
 
     // 模式枚举
     private static MODE = {
-        POINTER_LOCK: 0, // 指针锁定模式
-        ORBIT: 1,        // 轨道控制模式
-        EDGE_PAN: 2      // 边缘推动平移模式
+        EDGE_PAN: 0,      // 边缘推动平移模式
+        POINTER_LOCK: 1, // 指针锁定模式
+        ORBIT: 2,        // 轨道控制模式
     };
 
-    private currentMode: number = MyCameraControls.MODE.POINTER_LOCK; // 当前模式
+    private currentMode: number = MyCameraControls.MODE.EDGE_PAN; // 当前模式
     public static isPointerLocked: boolean = false; // 指针锁定状态
 
     // 键盘状态
@@ -30,12 +30,13 @@ export class MyCameraControls {
     // 移动速度
     private velocity: THREE.Vector3 = new THREE.Vector3();
     private targetVelocity: THREE.Vector3 = new THREE.Vector3(); // 目标速度
+    private edgePanVelocity: THREE.Vector3 = new THREE.Vector3(); // 目标速度
     private moveSpeed: number = 10; // 移动速度
     private smoothFactor: number = 0.1; // 平滑因子
 
     // 边缘推动平移参数
-    private edgePanMargin: number = 10; // 边缘推动的边界距离（像素）
-    private edgePanSpeed: number = 5;   // 边缘推动的速度
+    private edgePanMargin: number = 30; // 边缘推动的边界距离（像素）
+    private edgePanSpeed: number = 20;   // 边缘推动的速度
 
     constructor(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
         this.camera = camera;
@@ -62,23 +63,25 @@ export class MyCameraControls {
         document.addEventListener('keyup', this.onKeyUp.bind(this), false);
 
         // 监听鼠标点击事件
-        window.addEventListener('click', (event) => {
-            if (MyCameraControls.isPointerLocked) return;
-            const canvas = this.renderer.domElement;
-            const rect = canvas.getBoundingClientRect();
-            // 检查点击事件是否发生在画布区域内
-            if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
-                this.enablePointerLock();
-            }
-        });
+        window.addEventListener('click', (event) => this.onClick(event));
 
         // 监听鼠标移动事件（用于边缘推动平移模式）
-        this.renderer.domElement.addEventListener('mousemove', (event) => this.onMouseMove(event));
+        window.addEventListener('mousemove', (event) => this.onMouseMove(event));
     }
 
-    // 切换模式
-    private switchMode(): void {
-        this.currentMode = (this.currentMode + 1) % 3; // 循环切换三种模式
+    // 处理鼠标点击事件
+    private onClick(event: MouseEvent): void {
+        // 仅在 ORBIT 模式下，点击屏幕切换到 POINTER_LOCK 模式
+        if (this.currentMode === MyCameraControls.MODE.ORBIT) {
+            this.switchToMode(MyCameraControls.MODE.POINTER_LOCK);
+        }
+    }
+
+    // 切换到指定模式
+    private switchToMode(mode: number): void {
+        if (this.currentMode == mode)
+            return;
+        this.currentMode = mode;
         console.log(`Switched to mode: ${this.currentMode}`);
 
         // 根据模式启用/禁用控件
@@ -94,10 +97,15 @@ export class MyCameraControls {
         }
     }
 
+    // 切换模式（循环切换）
+    private switchMode(): void {
+        const nextMode = (this.currentMode + 1) % 3; // 循环切换三种模式
+        this.switchToMode(nextMode);
+    }
+
     // 处理鼠标移动事件（用于边缘推动平移模式）
     private onMouseMove(event: MouseEvent): void {
         if (this.currentMode !== MyCameraControls.MODE.EDGE_PAN) return;
-        console.warn(`Mouse move      mode(${this.currentMode})   event: ${event}`);
         const canvas = this.renderer.domElement;
         const rect = canvas.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
@@ -108,22 +116,23 @@ export class MyCameraControls {
         const isRightEdge = mouseX > rect.width - this.edgePanMargin;
         const isTopEdge = mouseY < this.edgePanMargin;
         const isBottomEdge = mouseY > rect.height - this.edgePanMargin;
+        // console.warn(`Mouse move       (${mouseX}, ${mouseY})  (${isLeftEdge}, ${isRightEdge}, ${isTopEdge}, ${isBottomEdge})`);
 
         // 根据边缘推动摄像机
         if (isLeftEdge) {
-            this.targetVelocity.x = -this.edgePanSpeed;
+            this.edgePanVelocity.x = -this.edgePanSpeed;
         } else if (isRightEdge) {
-            this.targetVelocity.x = this.edgePanSpeed;
+            this.edgePanVelocity.x = this.edgePanSpeed;
         } else {
-            this.targetVelocity.x = 0;
+            this.edgePanVelocity.x = 0;
         }
 
         if (isTopEdge) {
-            this.targetVelocity.z = -this.edgePanSpeed;
+            this.edgePanVelocity.z = -this.edgePanSpeed;
         } else if (isBottomEdge) {
-            this.targetVelocity.z = this.edgePanSpeed;
+            this.edgePanVelocity.z = this.edgePanSpeed;
         } else {
-            this.targetVelocity.z = 0;
+            this.edgePanVelocity.z = 0;
         }
     }
 
@@ -165,6 +174,11 @@ export class MyCameraControls {
                 break;
             case 'KeyT': // 切换模式
                 this.switchMode();
+                break;
+            case 'Escape': // 仅在 POINTER_LOCK 模式下，按 ESC 切换到 ORBIT 模式
+                if (this.currentMode === MyCameraControls.MODE.POINTER_LOCK) {
+                    this.switchToMode(MyCameraControls.MODE.ORBIT);
+                }
                 break;
         }
     }
@@ -213,6 +227,7 @@ export class MyCameraControls {
             // 轨道控制模式
             this.orbitControls.enabled = true;
             this.orbitControls.update();
+            this.updatePer(deltaTime);
         } else if (this.currentMode === MyCameraControls.MODE.EDGE_PAN) {
             // 边缘推动平移模式
             this.orbitControls.enabled = false;
@@ -224,6 +239,12 @@ export class MyCameraControls {
     private updatePer(deltaTime: number): void {
         // 根据键盘状态更新目标速度
         this.targetVelocity.set(0, 0, 0);
+        if (this.currentMode === MyCameraControls.MODE.EDGE_PAN)
+        {
+            this.targetVelocity.x -= this.edgePanVelocity.x * deltaTime;
+            this.targetVelocity.y -= this.edgePanVelocity.y * deltaTime;
+            this.targetVelocity.z -= this.edgePanVelocity.z * deltaTime;
+        }
 
         if (this.moveForward) this.targetVelocity.z += this.moveSpeed * deltaTime;
         if (this.moveBackward) this.targetVelocity.z -= this.moveSpeed * deltaTime;
