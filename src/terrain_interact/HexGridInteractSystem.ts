@@ -45,18 +45,28 @@ export class HexGridInteractSystem {
         this.eventManager.on('cellSelect', (cell: HexCellView) => this.handleCellSelect(cell));
 
         // 绑定鼠标移动事件
-        this.renderer.domElement.addEventListener('mousemove', (event) => this.onMouseMove(event));
+        window.addEventListener('mousemove', (event) => this.bindMouseEvent(event, this.onMouseMove));
 
         // 绑定鼠标点击事件
-        this.renderer.domElement.addEventListener('click', (event) => this.onMouseClick(event));
+        window.addEventListener('click', (event) => this.bindMouseEvent(event, this.onMouseClick));
 
         // 绑定鼠标按下事件
-        this.renderer.domElement.addEventListener('mousedown', (event) => this.onMouseDown(event));
+        window.addEventListener('mousedown', (event) => this.bindMouseEvent(event, this.onMouseDown));
 
         // 绑定鼠标松开事件
-        this.renderer.domElement.addEventListener('mouseup', (event) => this.onMouseUp(event));
+        window.addEventListener('mouseup', (event) => this.bindMouseEvent(event, this.onMouseUp));
 
         console.warn("HexGridInteractSystem initialized!");
+    }
+
+    //绑定鼠标方法，并检查在画布范围内才生效
+    private bindMouseEvent(event: MouseEvent, fn: (event: MouseEvent) => void) {
+        const canvas = this.renderer.domElement;
+        const rect = canvas.getBoundingClientRect();
+        // 检查点击事件是否发生在画布区域内
+        if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
+            fn.call(this, event);
+        }
     }
 
     // 获取所有单元格视图
@@ -118,10 +128,18 @@ export class HexGridInteractSystem {
             this.hoveredCell.onHoverEnd(); // 结束悬停
             this.hoveredCell = null;
         }
-        console.warn(`onMouseMove  (${event.clientX}, ${event.clientY}) `)
         // 更新框选矩形面
         if (this.isDragging) {
-            this.dragEnd.set(event.clientX, event.clientY);
+            // console.warn(`onMouseMove  (${event.clientX}, ${event.clientY})  (${event.offsetX}, ${event.offsetY}) `);//奇怪，这些坐标都是不变的。
+            // console.warn(`onMouseMove   (${event.movementX}, ${event.movementY})    `);//这些坐标有变化，但数值变化很小，大约只是-10~10之间，不知道意味着什么。
+            if (MyCameraControls.isPointerLocked) {
+                // 在 Pointer Lock 模式下使用相对移动量
+                this.dragEnd.x += event.movementX;
+                this.dragEnd.y += event.movementY;
+            } else {
+                // 在非 Pointer Lock 模式下使用绝对坐标
+                this.dragEnd.set(event.clientX, event.clientY);
+            }
             this.hoverEffectManager.updateSelectionRect(this.dragStart, this.dragEnd);
         }
     }
