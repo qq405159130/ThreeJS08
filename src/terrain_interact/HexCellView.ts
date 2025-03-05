@@ -36,14 +36,6 @@ export class HexCellView {
         this.eventManager?.emit('cellHoverEnd', this);
     }
 
-    // 点击事件
-    public onClick(): void {
-        Config.isLogInterative && console.warn("onClick ~~~~~");
-        this.isSelected = !this.isSelected;
-        // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(this.isSelected ? 0x0000ff : 0x00ff00); // 选中蓝色
-        this.eventManager?.emit('cellClick', this);
-    }
-
     // 取消操作
     public cancelAction(): void {
         this.isSelected = false;

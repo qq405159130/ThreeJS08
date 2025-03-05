@@ -38,11 +38,10 @@ export class HexGridInteractSystem {
         // 监听事件
         this.eventManager.on('cellHover', (cell: HexCellView) => this.handleCellHoverStart(cell));
         this.eventManager.on('cellHoverEnd', (cell: HexCellView) => this.handleCellHoverEnd(cell));
-        this.eventManager.on('cellClick', (cell: HexCellView) => this.handleCellClick(cell));
-        this.eventManager.on('cellCancelAction', (cell: HexCellView) => this.handleCellCancelAction(cell));
+        this.eventManager.on('cellCancelAction', (cell: HexCellView) => this.handleCellDeselect(cell));
+        this.eventManager.on('cellSelect', (cell: HexCellView) => this.handleCellSelect(cell));
         this.eventManager.on('cellSelectHover', (cell: HexCellView) => this.handleCellSelectHover(cell));
         this.eventManager.on('cellSelectHoverEnd', (cell: HexCellView) => this.handleCellSelectHoverEnd(cell));
-        this.eventManager.on('cellSelect', (cell: HexCellView) => this.handleCellSelect(cell));
 
         // 绑定鼠标移动事件
         window.addEventListener('mousemove', (event) => this.bindMouseEvent(event, this.onMouseMove));
@@ -231,13 +230,15 @@ export class HexGridInteractSystem {
         this.hoverEffectManager.hideHoverEffect();
     }
 
-    // 处理点击事件
-    private handleCellClick(cell: HexCellView): void {
-        console.warn(`Cell clicked: (${cell.q}, ${cell.r})`);
+    // 处理选中事件
+    private handleCellSelect(cell: HexCellView): void {
+        Config.isLogInterative && console.warn("handleCellSelect ~~~~~");
+        this.hoverEffectManager.showSelectEffect(cell.mesh);
     }
 
     // 处理取消操作事件
-    private handleCellCancelAction(cell: HexCellView): void {
+    private handleCellDeselect(cell: HexCellView): void {
+        Config.isLogInterative && console.warn("handleCellDeselect ~~~~~");
         this.hoverEffectManager.hideSelectEffect();
     }
 
@@ -251,12 +252,6 @@ export class HexGridInteractSystem {
     private handleCellSelectHoverEnd(cell: HexCellView): void {
         Config.isLogInterative && console.warn("handleCellSelectHoverEnd ~~~~~");
         this.hoverEffectManager.hideHoverEffect();
-    }
-
-    // 处理选中事件
-    private handleCellSelect(cell: HexCellView): void {
-        Config.isLogInterative && console.warn("handleCellSelect ~~~~~");
-        this.hoverEffectManager.showSelectEffect(cell.mesh);
     }
 
     // 更新系统
