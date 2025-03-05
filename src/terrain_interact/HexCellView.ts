@@ -10,7 +10,7 @@ export class HexCellView {
 
     private eventManager?: EventManager;
 
-    private canShowInterative: boolean = false;
+    // private canShowInterative: boolean = false;
 
     constructor(public q: number, public r: number, mesh: THREE.Mesh) {
         this.mesh = mesh;
@@ -21,10 +21,10 @@ export class HexCellView {
     }
 
     // 悬停事件
-    public onHover(): void {
+    public onHoverStart(): void {
         Config.isLogInterative && console.warn("onHover ~~~~~");
         this.isHovered = true;
-        this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0xff0000); // 高亮红色
+        // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0xff0000); // 高亮红色
         this.eventManager?.emit('cellHover', this);
     }
 
@@ -32,7 +32,7 @@ export class HexCellView {
     public onHoverEnd(): void {
         Config.isLogInterative && console.warn("onHoverEnd ~~~~~");
         this.isHovered = false;
-        this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
+        // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
         this.eventManager?.emit('cellHoverEnd', this);
     }
 
@@ -40,19 +40,19 @@ export class HexCellView {
     public onClick(): void {
         Config.isLogInterative && console.warn("onClick ~~~~~");
         this.isSelected = !this.isSelected;
-        this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(this.isSelected ? 0x0000ff : 0x00ff00); // 选中蓝色
+        // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(this.isSelected ? 0x0000ff : 0x00ff00); // 选中蓝色
         this.eventManager?.emit('cellClick', this);
     }
 
     // 取消操作
     public cancelAction(): void {
         this.isSelected = false;
-        this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
+        // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
         this.eventManager?.emit('cellCancelAction', this);
     }
 
     // 刚被算入框选范围。
-    public onSelectHover(): void {
+    public onSelectHoverStart(): void {
         this.eventManager?.emit('cellSelectHover', this);
     }
 
