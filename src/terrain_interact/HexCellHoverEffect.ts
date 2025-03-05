@@ -5,6 +5,7 @@ export class HexCellHoverEffect {
     private border?: THREE.LineSegments; // 边框
     private overlay?: THREE.Mesh; // 颜色叠加
     private originalScale: THREE.Vector3; // 原始缩放值
+    private selectOverlay?: THREE.Mesh; // 选中叠加
 
     constructor(mesh: THREE.Mesh) {
         this.mesh = mesh;
@@ -52,6 +53,27 @@ export class HexCellHoverEffect {
     }
 
     /**
+     * 显示选中效果
+     */
+    public showSelect(): void {
+        // 显示选中叠加
+        if (!this.selectOverlay) {
+            const selectOverlayGeometry = this.mesh.geometry.clone();
+            const selectOverlayMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 }); // 红色半透明
+            this.selectOverlay = new THREE.Mesh(selectOverlayGeometry, selectOverlayMaterial);
+            //避免干扰
+            this.selectOverlay.castShadow = false;
+            this.selectOverlay.receiveShadow = false;
+            this.selectOverlay.raycast = () => null;
+            //尽量让 selectOverlay 节省性能
+            this.selectOverlay.name = 'selectOverlay';
+            this.selectOverlay.matrixAutoUpdate = false;
+            this.selectOverlay.updateMatrix();
+            this.mesh.add(this.selectOverlay);
+        }
+    }
+
+    /**
      * 隐藏 hover 效果
      */
     public hide(): void {
@@ -72,10 +94,21 @@ export class HexCellHoverEffect {
     }
 
     /**
+     * 隐藏选中效果
+     */
+    public hideSelect(): void {
+        if (this.selectOverlay) {
+            this.mesh.remove(this.selectOverlay);
+            this.selectOverlay = undefined;
+        }
+    }
+
+    /**
      * 销毁 hover 效果
      */
     public dispose(): void {
         this.hide();
+        this.hideSelect();
         this.mesh = null!;
     }
 }

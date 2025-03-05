@@ -1,4 +1,3 @@
-// src/terrain/HexCell.ts
 import * as THREE from 'three';
 import { EventManager } from '../utils/EventManager';
 import { HexCellData } from '../terrain/types';
@@ -16,8 +15,6 @@ export class HexCellView {
     constructor(public q: number, public r: number, mesh: THREE.Mesh) {
         this.mesh = mesh;
     }
-
-
 
     public init(eventManager: EventManager) {
         this.eventManager = eventManager;
@@ -51,5 +48,22 @@ export class HexCellView {
     public cancelAction(): void {
         this.isSelected = false;
         this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
+        this.eventManager?.emit('cellCancelAction', this);
+    }
+
+    // 刚被算入框选范围。
+    public onSelectHover(): void {
+        this.eventManager?.emit('cellSelectHover', this);
+    }
+
+    // 刚被移出框选范围。
+    public onSelectHoverEnd(): void {
+        this.eventManager?.emit('cellSelectHoverEnd', this);
+    }
+
+    // 被选中
+    public onSelect(): void {
+        this.isSelected = true;
+        this.eventManager?.emit('cellSelect', this);
     }
 }

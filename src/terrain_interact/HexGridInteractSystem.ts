@@ -10,6 +10,10 @@ export class HexGridInteractSystem {
     private raycaster: THREE.Raycaster = new THREE.Raycaster(); // 光线投射器
     private mouse: THREE.Vector2 = new THREE.Vector2(); // 鼠标位置
     private hoveredCell: HexCellView | null = null; // 当前悬停的单元格
+    private selectedCells: Set<HexCellView> = new Set(); // 当前选中的单元格
+    private isDragging: boolean = false; // 是否正在拖动
+    private dragStart: THREE.Vector2 = new THREE.Vector2(); // 拖动起始位置
+    private dragEnd: THREE.Vector2 = new THREE.Vector2(); // 拖动结束位置
     private eventManager: EventManager;
 
     private hoverEffectManager: HexCellHoverEffectManager = new HexCellHoverEffectManager();
@@ -34,12 +38,22 @@ export class HexGridInteractSystem {
         this.eventManager.on('cellHover', (cell: HexCellView) => this.handleCellHover(cell));
         this.eventManager.on('cellHoverEnd', (cell: HexCellView) => this.handleCellHoverEnd(cell));
         this.eventManager.on('cellClick', (cell: HexCellView) => this.handleCellClick(cell));
+        this.eventManager.on('cellCancelAction', (cell: HexCellView) => this.handleCellCancelAction(cell));
+        this.eventManager.on('cellSelectHover', (cell: HexCellView) => this.handleCellSelectHover(cell));
+        this.eventManager.on('cellSelectHoverEnd', (cell: HexCellView) => this.handleCellSelectHoverEnd(cell));
+        this.eventManager.on('cellSelect', (cell: HexCellView) => this.handleCellSelect(cell));
 
         // 绑定鼠标移动事件
         this.renderer.domElement.addEventListener('mousemove', (event) => this.onMouseMove(event));
 
         // 绑定鼠标点击事件
         this.renderer.domElement.addEventListener('click', (event) => this.onMouseClick(event));
+
+        // 绑定鼠标按下事件
+        this.renderer.domElement.addEventListener('mousedown', (event) => this.onMouseDown(event));
+
+        // 绑定鼠标松开事件
+        this.renderer.domElement.addEventListener('mouseup', (event) => this.onMouseUp(event));
 
         console.warn("HexGridInteractSystem initialized!");
     }
@@ -108,9 +122,9 @@ export class HexGridInteractSystem {
     // 处理鼠标点击事件
     private onMouseClick(event: MouseEvent): void {
         // 将鼠标位置归一化为设备坐标（-1到+1）
-        this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
+        this.mouse.x = MyCameraControls.isPointerLocked ? 0 : (event.clientX / window.innerWidth) * 2 - 1;
+        this.mouse.y = MyCameraControls.isPointerLocked ? 0 : -(event.clientY / window.innerHeight) * 2 + 1;
+        
         // 更新光线投射器
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
@@ -121,8 +135,88 @@ export class HexGridInteractSystem {
         if (intersects.length > 0) {
             const intersectedCell = views.find(cell => cell.mesh === intersects[0].object);
             if (intersectedCell) {
-                intersectedCell.onClick(); // 触发点击事件
+                if (event.shiftKey) {
+                    // 加选逻辑
+                    if (this.selectedCells.has(intersectedCell)) {
+                        intersectedCell.cancelAction();
+                        this.selectedCells.delete(intersectedCell);
+                    } else {
+                        intersectedCell.onSelect();
+                        this.selectedCells.add(intersectedCell);
+                    }
+                } else {
+                    // 点选逻辑
+                    this.selectedCells.forEach(cell => cell.cancelAction());
+                    this.selectedCells.clear();
+                    intersectedCell.onSelect();
+                    this.selectedCells.add(intersectedCell);
+                }
             }
+        }
+    }
+
+    // 处理鼠标按下事件
+    private onMouseDown(event: MouseEvent): void {
+        if (event.button === 0) { // 左键按下
+            this.isDragging = true;
+            this.dragStart.set(event.clientX, event.clientY);
+        }
+    }
+
+    // 处理鼠标松开事件
+    private onMouseUp(event: MouseEvent): void {
+        if (event.button === 0) { // 左键松开
+            this.isDragging = false;
+            this.dragEnd.set(event.clientX, event.clientY);
+            this.handleBoxSelect(event);
+        }
+    }
+
+    // 处理框选逻辑
+    private handleBoxSelect(event: MouseEvent): void {
+        const views = Array.from(this.cellViews.values());
+        const selectedCells = new Set<HexCellView>();
+
+        const minX = Math.min(this.dragStart.x, this.dragEnd.x);
+        const maxX = Math.max(this.dragStart.x, this.dragEnd.x);
+        const minY = Math.min(this.dragStart.y, this.dragEnd.y);
+        const maxY = Math.max(this.dragStart.y, this.dragEnd.y);
+
+        views.forEach(cell => {
+            const screenPosition = new THREE.Vector3();
+            cell.mesh.getWorldPosition(screenPosition);
+            screenPosition.project(this.camera);
+
+            const x = (screenPosition.x + 1) * window.innerWidth / 2;
+            const y = (-screenPosition.y + 1) * window.innerHeight / 2;
+
+            if (x >= minX && x <= maxX && y >= minY && y <= maxY) {
+                selectedCells.add(cell);
+                cell.onSelectHover();
+            } else {
+                cell.onSelectHoverEnd();
+            }
+        });
+
+        if (event.shiftKey) {
+            // 加选逻辑
+            selectedCells.forEach(cell => {
+                if (this.selectedCells.has(cell)) {
+                    cell.cancelAction();
+                    this.selectedCells.delete(cell);
+                } else {
+                    cell.onSelect();
+                    this.selectedCells.add(cell);
+                }
+            });
+        } else {
+            // 点选逻辑
+            this.selectedCells.forEach(cell => cell.cancelAction());
+            this.selectedCells.clear();
+            selectedCells.forEach(cell => {
+                cell.onSelect();
+                this.selectedCells.add(cell);
+            });
         }
     }
 
@@ -143,9 +237,24 @@ export class HexGridInteractSystem {
         console.warn(`Cell clicked: (${cell.q}, ${cell.r})`);
     }
 
-    // 处理全局点击事件（取消选中）
-    private handleGlobalClick(): void {
-        this.cellViews.forEach(cell => cell.cancelAction());
+    // 处理取消操作事件
+    private handleCellCancelAction(cell: HexCellView): void {
+        this.hoverEffectManager.hideSelectEffect();
+    }
+
+    // 处理框选悬停事件
+    private handleCellSelectHover(cell: HexCellView): void {
+        this.hoverEffectManager.showHoverEffect(cell.mesh);
+    }
+
+    // 处理框选悬停结束事件
+    private handleCellSelectHoverEnd(cell: HexCellView): void {
+        this.hoverEffectManager.hideHoverEffect();
+    }
+
+    // 处理选中事件
+    private handleCellSelect(cell: HexCellView): void {
+        this.hoverEffectManager.showSelectEffect(cell.mesh);
     }
 
     // 更新系统

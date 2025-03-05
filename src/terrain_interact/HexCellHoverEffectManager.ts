@@ -4,6 +4,7 @@ import { HexCellHoverEffect } from './HexCellHoverEffect';
 export class HexCellHoverEffectManager {
     private hoverEffects: Map<THREE.Mesh, HexCellHoverEffect> = new Map(); // 六边形网格与 hover 效果的映射
     private currentHoverEffect: HexCellHoverEffect | null = null; // 当前 hover 的效果
+    private currentSelectEffect: HexCellHoverEffect | null = null; // 当前选中的效果
 
     /**
      * 获取或创建 hover 效果
@@ -39,6 +40,29 @@ export class HexCellHoverEffectManager {
         if (this.currentHoverEffect) {
             this.currentHoverEffect.hide();
             this.currentHoverEffect = null;
+        }
+    }
+
+    /**
+     * 显示选中效果
+     * @param mesh 六边形网格
+     */
+    public showSelectEffect(mesh: THREE.Mesh): void {
+        if (this.currentSelectEffect) {
+            this.currentSelectEffect.hideSelect(); // 隐藏上一个选中效果
+        }
+        const hoverEffect = this.getHoverEffect(mesh);
+        hoverEffect.showSelect();
+        this.currentSelectEffect = hoverEffect;
+    }
+
+    /**
+     * 隐藏选中效果
+     */
+    public hideSelectEffect(): void {
+        if (this.currentSelectEffect) {
+            this.currentSelectEffect.hideSelect();
+            this.currentSelectEffect = null;
         }
     }
 
