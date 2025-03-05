@@ -3,7 +3,7 @@ import { HexCellHoverEffect } from './HexCellHoverEffect';
 
 export class HexCellHoverEffectManager {
     private hoverEffects: Map<THREE.Mesh, HexCellHoverEffect> = new Map(); // 六边形网格与 hover 效果的映射
-    private currentHoverEffect: HexCellHoverEffect | null = null; // 当前 hover 的效果
+    private currentHoverEffect: HexCellHoverEffect[] = []; // 当前 hover 的效果
     private currentSelectEffects: HexCellHoverEffect[] = []; // 当前选中的效果
 
 
@@ -16,7 +16,7 @@ export class HexCellHoverEffectManager {
      * @param mesh 六边形网格
      * @returns hover 效果
      */
-    public getHoverEffect(mesh: THREE.Mesh): HexCellHoverEffect {
+    private getHoverEffect(mesh: THREE.Mesh): HexCellHoverEffect {
         let hoverEffect = this.hoverEffects.get(mesh);
         if (!hoverEffect) {
             hoverEffect = new HexCellHoverEffect(mesh);
@@ -29,24 +29,33 @@ export class HexCellHoverEffectManager {
      * 显示 hover 效果
      * @param mesh 六边形网格
      */
-    public showHoverEffect(mesh: THREE.Mesh): void {
-        if (this.currentHoverEffect) {
-            this.currentHoverEffect.hide(); // 隐藏上一个 hover 效果
-        }
-        const hoverEffect = this.getHoverEffect(mesh);
-        hoverEffect.show();
-        this.currentHoverEffect = hoverEffect;
+    public showHoverEffect(meshs: THREE.Mesh[]): void {
+        this._hideHoverEffect();
+        meshs.forEach(mesh => {
+            const hoverEffect = this.getHoverEffect(mesh);
+            hoverEffect.showHover();
+            this.currentHoverEffect.push(hoverEffect);
+        });
     }
 
     /**
      * 隐藏 hover 效果
      */
-    public hideHoverEffect(): void {
-        if (this.currentHoverEffect) {
-            this.currentHoverEffect.hide();
-            this.currentHoverEffect = null;
-        }
+    public hideHoverEffect(meshs: THREE.Mesh[]): void {
+        meshs.forEach((mesh) => {
+            const hoverEffect = this.getHoverEffect(mesh);
+            hoverEffect.hideHover();
+        });
     }
+
+
+    private _hideHoverEffect(): void {
+        if (this.currentHoverEffect.length != 0) {
+            this.currentHoverEffect.forEach(effect => effect.hideHover());
+        }
+        this.currentHoverEffect.length = 0;
+    }
+
 
     /**
      * 显示选中效果

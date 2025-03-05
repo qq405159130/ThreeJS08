@@ -13,6 +13,7 @@ export class HexGridInteractSystem {
     private hoveredCell: HexCellView | null = null; // 当前悬停的单元格
     private selectedCells: Set<HexCellView> = new Set(); // 当前选中的单元格
     private isDragging: boolean = false; // 是否正在拖动
+    private isDragDone: boolean = false;
     private dragStart: THREE.Vector2 = new THREE.Vector2(); // 拖动起始位置
     private dragEnd: THREE.Vector2 = new THREE.Vector2(); // 拖动结束位置
     private eventManager: EventManager;
@@ -40,14 +41,6 @@ export class HexGridInteractSystem {
 
     // 初始化
     private init(): void {
-        // // 监听事件
-        // this.eventManager.on('cellHover', (cell: HexCellView) => this.handleCellHoverStart(cell));
-        // this.eventManager.on('cellHoverEnd', (cell: HexCellView) => this.handleCellHoverEnd(cell));
-        // this.eventManager.on('cellCancelAction', (cell: HexCellView) => this.handleCellDeselect(cell));
-        // this.eventManager.on('cellSelect', (cell: HexCellView) => this.handleCellSelect(cell));
-        // this.eventManager.on('cellSelectHover', (cell: HexCellView) => this.handleCellSelectHover(cell));
-        // this.eventManager.on('cellSelectHoverEnd', (cell: HexCellView) => this.handleCellSelectHoverEnd(cell));
-
         // 绑定鼠标移动事件
         window.addEventListener('mousemove', (event) => this.bindMouseEvent(event, this.onMouseMove));
 
@@ -89,7 +82,7 @@ export class HexGridInteractSystem {
         // 检测与网格的交互
         const views = Array.from(this.cellViews.values());
         const intersects = this.raycaster.intersectObjects(views.map(cell => cell.mesh));
-        Config.isLogInterative && console.warn(`hover     views:${views.length}       intersects:${intersects.length}    this.scene.children.length: ${this.scene.children.length}`);
+        // Config.isLogInterative && console.warn(`hover     views:${views.length}       intersects:${intersects.length}    this.scene.children.length: ${this.scene.children.length}`);
         if (intersects.length > 0) {
             const intersectedCell = views.find(cell => cell.mesh === intersects[0].object);
             if (intersectedCell && intersectedCell !== this.hoveredCell) {
@@ -100,7 +93,7 @@ export class HexGridInteractSystem {
                 this.hoveredCell = intersectedCell;
             }
         } else if (this.hoveredCell) {
-            this.handleCellSelectHoverEnd(this.hoveredCell);// 结束悬停
+            this.handleCellSelectHoverEnd([this.hoveredCell]);// 结束悬停
             this.hoveredCell = null;
         }
         // 更新框选矩形面
@@ -121,10 +114,12 @@ export class HexGridInteractSystem {
 
     // 处理鼠标点击事件
     private onMouseClick(event: MouseEvent): void {
+        if (!this.isDragDone)
+            return;//还在拖动中
         // 将鼠标位置归一化为设备坐标（-1到+1）
         this.mouse.x = MyCameraControls.isPointerLocked ? 0 : (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = MyCameraControls.isPointerLocked ? 0 : -(event.clientY / window.innerHeight) * 2 + 1;
-
+        console.error("click")
         // 更新光线投射器
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
@@ -170,9 +165,14 @@ export class HexGridInteractSystem {
     private onMouseUp(event: MouseEvent): void {
         if (event.button === 0) { // 左键松开
             this.isDragging = false;
+            this.isDragDone = false;
             this.dragEnd.set(event.clientX, event.clientY);
-            this.handleBoxSelect(event);
             this.rectSelectView.removeSelectionRect();
+            //drag起终点不会太近时
+            if (!(Math.abs(this.dragStart.x - this.dragEnd.x) < 5 && Math.abs(this.dragStart.y - this.dragEnd.y) < 5)) {
+                this.handleBoxSelect(event);
+            }
+            setTimeout(() => { this.isDragDone = true }, 0);
         }
     }
 
@@ -180,6 +180,7 @@ export class HexGridInteractSystem {
     private handleBoxSelect(event: MouseEvent): void {
         const views = Array.from(this.cellViews.values());
         const newSelectedCells = new Set<HexCellView>();
+        const preSelectedCells = new Set<HexCellView>()
 
         const minX = Math.min(this.dragStart.x, this.dragEnd.x);
         const maxX = Math.max(this.dragStart.x, this.dragEnd.x);
@@ -196,46 +197,40 @@ export class HexGridInteractSystem {
 
             if (x >= minX && x <= maxX && y >= minY && y <= maxY) {
                 newSelectedCells.add(cell);
-                this.handleCellSelectHover(cell);
-            } else {
-                this.handleCellSelectHoverEnd(cell);
             }
         });
 
+
         if (event.shiftKey) {
             // 加选逻辑
-            newSelectedCells.forEach(cell => {
-                if (this.selectedCells.has(cell)) {
-                    this.handleCellDeselect([cell]);
-                    this.selectedCells.delete(cell);
-                } else {
-                    this.handleCellSelect([cell]);
-                    this.selectedCells.add(cell);
-                }
+            this.selectedCells.forEach(cell => {
+                newSelectedCells.add(cell);
             });
+            this.selectedCells = newSelectedCells;
         } else {
             // 点选逻辑
-            this.handleCellSelect(Array.from(this.selectedCells));
-            this.selectedCells.clear();
-            newSelectedCells.forEach(cell => {
-                this.handleCellSelect([cell]);
-                this.selectedCells.add(cell);
+            this.selectedCells.forEach(cell => {
+                preSelectedCells.add(cell)
             });
+            this.selectedCells = newSelectedCells;
         }
+
+        preSelectedCells.size != 0 && this.handleCellSelectHoverEnd(Array.from(preSelectedCells));
+        newSelectedCells.size != 0 && this.handleCellSelectHover(Array.from(newSelectedCells));
     }
 
     // 处理悬停事件
     private handleCellHoverStart(cell: HexCellView): void {
         // cell.onHoverStart(); 
         Config.isLogInterative && console.warn(`Cell hovered: (${cell.q}, ${cell.r})`);
-        this.hoverEffectManager.showHoverEffect(cell.mesh);
+        this.hoverEffectManager.showHoverEffect([cell.mesh]);
     }
 
     // 处理悬停结束事件
     private handleCellHoverEnd(cell: HexCellView): void {
         // cell.onHoverEnd(); 
         Config.isLogInterative && console.warn(`Cell hover ended: (${cell.q}, ${cell.r})`);
-        this.hoverEffectManager.hideHoverEffect();
+        this.hoverEffectManager.hideHoverEffect([cell.mesh]);
     }
 
     // 处理选中事件
@@ -253,17 +248,17 @@ export class HexGridInteractSystem {
     }
 
     // 处理框选悬停事件
-    private handleCellSelectHover(cell: HexCellView): void {
+    private handleCellSelectHover(cells: HexCellView[]): void {
         // cell.onSelectHoverStart();
         Config.isLogInterative && console.warn("handleCellSelectHover ~~~~~");
-        this.hoverEffectManager.showHoverEffect(cell.mesh);
+        this.hoverEffectManager.showHoverEffect(cells.map(cell => cell.mesh));
     }
 
     // 处理框选悬停结束事件
-    private handleCellSelectHoverEnd(cell: HexCellView): void {
+    private handleCellSelectHoverEnd(cells: HexCellView[]): void {
         // cell.onHoverEnd(); 
         Config.isLogInterative && console.warn("handleCellSelectHoverEnd ~~~~~");
-        this.hoverEffectManager.hideHoverEffect();
+        this.hoverEffectManager.hideHoverEffect(cells.map(cell => cell.mesh));
     }
 
     // 更新系统

@@ -15,7 +15,7 @@ export class HexCellHoverEffect {
     /**
      * 显示 hover 效果
      */
-    public show(): void {
+    public showHover(): void {
         // 显示边框
         if (!this.border) {
             const edges = new THREE.EdgesGeometry(this.mesh.geometry);
@@ -79,15 +79,12 @@ export class HexCellHoverEffect {
     /**
      * 隐藏 hover 效果
      */
-    public hide(): void {
+    public hideHover(): void {
         if (this.border) {
             this.border.visible = false;
         }
         if (this.overlay) {
             this.overlay.visible = false;
-        }
-        if (this.selectOverlay) {
-            this.selectOverlay.visible = false;
         }
         // 恢复原始缩放
         this.mesh.scale.copy(this.originalScale);
