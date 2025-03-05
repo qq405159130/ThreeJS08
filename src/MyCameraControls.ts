@@ -26,17 +26,23 @@ export class MyCameraControls {
     private moveRight: boolean = false;
     private moveUp: boolean = false;
     private moveDown: boolean = false;
+    private isShift: boolean = false;
 
     // 移动速度
     private velocity: THREE.Vector3 = new THREE.Vector3();
     private targetVelocity: THREE.Vector3 = new THREE.Vector3(); // 目标速度
     private edgePanVelocity: THREE.Vector3 = new THREE.Vector3(); // 目标速度
-    private moveSpeed: number = 10; // 移动速度
+    private readonly MOVE_SPEED: number = 10; // 移动速度
+    private get moveSpeed(): number {
+        return this.isShift ? this.MOVE_SPEED * 2 : this.MOVE_SPEED;
+    }
     private smoothFactor: number = 0.1; // 平滑因子
 
     // 边缘推动平移参数
     private edgePanMargin: number = 30; // 边缘推动的边界距离（像素）
     private edgePanSpeed: number = 20;   // 边缘推动的速度
+
+    private cameraInitRotation: THREE.Euler = new THREE.Euler(0, 0, 0);
 
     constructor(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
         this.camera = camera;
@@ -46,6 +52,7 @@ export class MyCameraControls {
         // 初始化PointerLockControls
         this.pointerLockControls = new PointerLockControls(this.camera, this.renderer.domElement);
         this.scene.add(this.pointerLockControls.object);
+        this.cameraInitRotation.copy(this.camera.rotation);
 
         // 初始化OrbitControls
         this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -85,15 +92,17 @@ export class MyCameraControls {
         console.log(`Switched to mode: ${this.currentMode}`);
 
         // 根据模式启用/禁用控件
-        if (this.currentMode === MyCameraControls.MODE.POINTER_LOCK) {
+        if (this.currentMode === MyCameraControls.MODE.EDGE_PAN) {
+            this.disablePointerLock();
+            this.orbitControls.enabled = false;
+            this.camera.rotation.copy(this.cameraInitRotation);
+        }
+        else if (this.currentMode === MyCameraControls.MODE.POINTER_LOCK) {
             this.orbitControls.enabled = false;
             this.enablePointerLock();
         } else if (this.currentMode === MyCameraControls.MODE.ORBIT) {
             this.disablePointerLock();
             this.orbitControls.enabled = true;
-        } else if (this.currentMode === MyCameraControls.MODE.EDGE_PAN) {
-            this.disablePointerLock();
-            this.orbitControls.enabled = false;
         }
     }
 
@@ -117,6 +126,11 @@ export class MyCameraControls {
         const isTopEdge = mouseY < this.edgePanMargin;
         const isBottomEdge = mouseY > rect.height - this.edgePanMargin;
         // console.warn(`Mouse move       (${mouseX}, ${mouseY})  (${isLeftEdge}, ${isRightEdge}, ${isTopEdge}, ${isBottomEdge})`);
+        if (!(isLeftEdge || isRightEdge || isTopEdge || isBottomEdge)) {
+            this.edgePanVelocity.x = 0;
+            this.edgePanVelocity.z = 0;
+            return;
+        }
 
         // 根据边缘推动摄像机
         if (isLeftEdge) {
@@ -180,6 +194,10 @@ export class MyCameraControls {
                     this.switchToMode(MyCameraControls.MODE.ORBIT);
                 }
                 break;
+            //是shift键
+            case 'ShiftLeft':
+                this.isShift = true;
+                break;
         }
     }
 
@@ -204,6 +222,9 @@ export class MyCameraControls {
             case 'KeyF':
                 this.moveDown = false;
                 break;
+            case 'ShiftLeft':
+                this.isShift = false;
+                break;
         }
     }
 
@@ -219,7 +240,12 @@ export class MyCameraControls {
 
     // 更新摄像机控制
     public update(deltaTime: number): void {
-        if (this.currentMode === MyCameraControls.MODE.POINTER_LOCK && MyCameraControls.isPointerLocked) {
+        if (this.currentMode === MyCameraControls.MODE.EDGE_PAN) {
+            // 边缘推动平移模式
+            this.orbitControls.enabled = false;
+            this.updatePer(deltaTime);
+        }
+        else if (this.currentMode === MyCameraControls.MODE.POINTER_LOCK && MyCameraControls.isPointerLocked) {
             // 指针锁定模式
             this.orbitControls.enabled = false;
             this.updatePer(deltaTime);
@@ -228,10 +254,6 @@ export class MyCameraControls {
             this.orbitControls.enabled = true;
             this.orbitControls.update();
             this.updatePer(deltaTime);
-        } else if (this.currentMode === MyCameraControls.MODE.EDGE_PAN) {
-            // 边缘推动平移模式
-            this.orbitControls.enabled = false;
-            this.updatePer(deltaTime);
         }
     }
 
@@ -239,8 +261,7 @@ export class MyCameraControls {
     private updatePer(deltaTime: number): void {
         // 根据键盘状态更新目标速度
         this.targetVelocity.set(0, 0, 0);
-        if (this.currentMode === MyCameraControls.MODE.EDGE_PAN)
-        {
+        if (this.currentMode === MyCameraControls.MODE.EDGE_PAN) {
             this.targetVelocity.x -= this.edgePanVelocity.x * deltaTime;
             this.targetVelocity.y -= this.edgePanVelocity.y * deltaTime;
             this.targetVelocity.z -= this.edgePanVelocity.z * deltaTime;
@@ -272,5 +293,14 @@ export class MyCameraControls {
         this.camera.position.add(direction.multiplyScalar(this.velocity.z));
         this.camera.position.add(right.multiplyScalar(this.velocity.x));
         this.camera.position.y += this.velocity.y;
+
+        this.camera.position.clamp(this.cameraPosMin, this.cameraPosMax);
+    }
+
+    private cameraPosMin: THREE.Vector3 = new THREE.Vector3(-5, 5, 10);
+    private cameraPosMax: THREE.Vector3 = new THREE.Vector3(25, 15, 30);
+    private setLimitCameraPosition(min: THREE.Vector3, max: THREE.Vector3): void {
+        this.cameraPosMin.copy(min);
+        this.cameraPosMax.copy(max);
     }
 }
