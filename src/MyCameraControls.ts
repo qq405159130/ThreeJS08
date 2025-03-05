@@ -8,7 +8,16 @@ export class MyCameraControls {
     private scene: THREE.Scene;
     private pointerLockControls: PointerLockControls;
     private orbitControls: OrbitControls;
-    public static isPointerLocked: boolean = false;
+
+    // 模式枚举
+    private static MODE = {
+        POINTER_LOCK: 0, // 指针锁定模式
+        ORBIT: 1,        // 轨道控制模式
+        EDGE_PAN: 2      // 边缘推动平移模式
+    };
+
+    private currentMode: number = MyCameraControls.MODE.POINTER_LOCK; // 当前模式
+    public static isPointerLocked: boolean = false; // 指针锁定状态
 
     // 键盘状态
     private moveForward: boolean = false;
@@ -23,6 +32,10 @@ export class MyCameraControls {
     private targetVelocity: THREE.Vector3 = new THREE.Vector3(); // 目标速度
     private moveSpeed: number = 10; // 移动速度
     private smoothFactor: number = 0.1; // 平滑因子
+
+    // 边缘推动平移参数
+    private edgePanMargin: number = 10; // 边缘推动的边界距离（像素）
+    private edgePanSpeed: number = 5;   // 边缘推动的速度
 
     constructor(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
         this.camera = camera;
@@ -48,10 +61,9 @@ export class MyCameraControls {
         document.addEventListener('keydown', this.onKeyDown.bind(this), false);
         document.addEventListener('keyup', this.onKeyUp.bind(this), false);
 
-
+        // 监听鼠标点击事件
         window.addEventListener('click', (event) => {
-            if (MyCameraControls.isPointerLocked)
-                return;
+            if (MyCameraControls.isPointerLocked) return;
             const canvas = this.renderer.domElement;
             const rect = canvas.getBoundingClientRect();
             // 检查点击事件是否发生在画布区域内
@@ -60,25 +72,65 @@ export class MyCameraControls {
             }
         });
 
-        // // 确保在画布添加到 DOM 之后绑定点击事件
-        // setTimeout(() => {
-        //     this.renderer.domElement.addEventListener('click', () => {
-        //         console.log('Click event triggered'); // 调试信息
-        //         if (!MyCameraControls.isPointerLocked) {
-        //             this.enablePointerLock();
-        //         }
-        //     });
-        // }, 0); // 使用 setTimeout 确保事件绑定在 DOM 更新之后
-
-        // // 确保在页面加载后立即监听点击事件
-        // window.addEventListener('load', () => {
-        //     this.renderer.domElement.addEventListener('click', () => this.onRenderClick());
-        // });
+        // 监听鼠标移动事件（用于边缘推动平移模式）
+        this.renderer.domElement.addEventListener('mousemove', (event) => this.onMouseMove(event));
     }
 
-    private onPointerLockChange() {
+    // 切换模式
+    private switchMode(): void {
+        this.currentMode = (this.currentMode + 1) % 3; // 循环切换三种模式
+        console.log(`Switched to mode: ${this.currentMode}`);
+
+        // 根据模式启用/禁用控件
+        if (this.currentMode === MyCameraControls.MODE.POINTER_LOCK) {
+            this.orbitControls.enabled = false;
+            this.enablePointerLock();
+        } else if (this.currentMode === MyCameraControls.MODE.ORBIT) {
+            this.disablePointerLock();
+            this.orbitControls.enabled = true;
+        } else if (this.currentMode === MyCameraControls.MODE.EDGE_PAN) {
+            this.disablePointerLock();
+            this.orbitControls.enabled = false;
+        }
+    }
+
+    // 处理鼠标移动事件（用于边缘推动平移模式）
+    private onMouseMove(event: MouseEvent): void {
+        if (this.currentMode !== MyCameraControls.MODE.EDGE_PAN) return;
+        console.warn(`Mouse move      mode(${this.currentMode})   event: ${event}`);
+        const canvas = this.renderer.domElement;
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        // 计算鼠标是否在边缘
+        const isLeftEdge = mouseX < this.edgePanMargin;
+        const isRightEdge = mouseX > rect.width - this.edgePanMargin;
+        const isTopEdge = mouseY < this.edgePanMargin;
+        const isBottomEdge = mouseY > rect.height - this.edgePanMargin;
+
+        // 根据边缘推动摄像机
+        if (isLeftEdge) {
+            this.targetVelocity.x = -this.edgePanSpeed;
+        } else if (isRightEdge) {
+            this.targetVelocity.x = this.edgePanSpeed;
+        } else {
+            this.targetVelocity.x = 0;
+        }
+
+        if (isTopEdge) {
+            this.targetVelocity.z = -this.edgePanSpeed;
+        } else if (isBottomEdge) {
+            this.targetVelocity.z = this.edgePanSpeed;
+        } else {
+            this.targetVelocity.z = 0;
+        }
+    }
+
+    // 处理PointerLockControls的锁定状态变化
+    private onPointerLockChange(): void {
         MyCameraControls.isPointerLocked = document.pointerLockElement === this.renderer.domElement;
-        console.warn('   Pointer lock state:', MyCameraControls.isPointerLocked);
+        console.warn('Pointer lock state:', MyCameraControls.isPointerLocked);
         if (!MyCameraControls.isPointerLocked) {
             // 退出PointerLock时重置键盘状态
             this.moveForward = false;
@@ -90,15 +142,8 @@ export class MyCameraControls {
         }
     }
 
-    private onRenderClick() {
-        console.warn("   onRenderClick   ")
-
-        if (!MyCameraControls.isPointerLocked) {
-            this.enablePointerLock();
-        }
-    }
-
-    private onKeyDown(event: KeyboardEvent) {
+    // 处理键盘按下事件
+    private onKeyDown(event: KeyboardEvent): void {
         switch (event.code) {
             case 'KeyW': // 向前移动
                 this.moveForward = true;
@@ -118,10 +163,14 @@ export class MyCameraControls {
             case 'KeyF': // 下降
                 this.moveDown = true;
                 break;
+            case 'KeyT': // 切换模式
+                this.switchMode();
+                break;
         }
     }
 
-    private onKeyUp(event: KeyboardEvent) {
+    // 处理键盘松开事件
+    private onKeyUp(event: KeyboardEvent): void {
         switch (event.code) {
             case 'KeyW':
                 this.moveForward = false;
@@ -144,30 +193,37 @@ export class MyCameraControls {
         }
     }
 
-    public enablePointerLock() {
+    // 启用PointerLock
+    public enablePointerLock(): void {
         this.pointerLockControls.lock();
     }
 
-    public disablePointerLock() {
+    // 禁用PointerLock
+    public disablePointerLock(): void {
         this.pointerLockControls.unlock();
     }
 
-    public update(deltaTime: number) {
-        if (MyCameraControls.isPointerLocked) {
-            // 如果启用了PointerLockControls，则禁用OrbitControls
+    // 更新摄像机控制
+    public update(deltaTime: number): void {
+        if (this.currentMode === MyCameraControls.MODE.POINTER_LOCK && MyCameraControls.isPointerLocked) {
+            // 指针锁定模式
             this.orbitControls.enabled = false;
             this.updatePer(deltaTime);
-        } else {
-            // 否则启用OrbitControls
+        } else if (this.currentMode === MyCameraControls.MODE.ORBIT) {
+            // 轨道控制模式
             this.orbitControls.enabled = true;
             this.orbitControls.update();
+        } else if (this.currentMode === MyCameraControls.MODE.EDGE_PAN) {
+            // 边缘推动平移模式
+            this.orbitControls.enabled = false;
+            this.updatePer(deltaTime);
         }
     }
 
+    // 更新摄像机位置
     private updatePer(deltaTime: number): void {
         // 根据键盘状态更新目标速度
         this.targetVelocity.set(0, 0, 0);
-        // console.warn('   updatePer    ', this.isPointerLocked);
 
         if (this.moveForward) this.targetVelocity.z += this.moveSpeed * deltaTime;
         if (this.moveBackward) this.targetVelocity.z -= this.moveSpeed * deltaTime;
@@ -178,7 +234,6 @@ export class MyCameraControls {
 
         // 平滑速度
         this.velocity.lerp(this.targetVelocity, this.smoothFactor);
-        //如果velocity 和 targetVelocity 之差，小于一定插值，直接赋值
         if (this.velocity.distanceTo(this.targetVelocity) < 0.01) {
             this.velocity.copy(this.targetVelocity);
         }
