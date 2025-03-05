@@ -22,13 +22,13 @@ export class MapViewUtils {
      */
     public static getColor(terrainType: eTerrain): THREE.Color {
         switch (terrainType) {
-            case eTerrain.Ocean: return new THREE.Color(0x0000ff); // 海洋 - 蓝色
-            case eTerrain.Plain: return new THREE.Color(0x00ff00); // 平原 - 绿色
+            case eTerrain.Ocean: return new THREE.Color(0x0000dd); // 海洋 - 蓝色
+            case eTerrain.Plain: return new THREE.Color(0x00dd00); // 平原 - 绿色
             case eTerrain.Hill: return new THREE.Color(0x808000); // 丘陵 - 橄榄色
             case eTerrain.Mountain: return new THREE.Color(0x8b4513); // 山地 - 棕色
-            case eTerrain.HighMountain: return new THREE.Color(0xffffff); // 高山 - 白色
-            case eTerrain.Lake: return new THREE.Color(0x00ffff); // 湖泊 - 青色
-            default: return new THREE.Color(0x000000); // 未知 - 黑色
+            case eTerrain.HighMountain: return new THREE.Color(0xdddddd); // 高山 - 白色
+            case eTerrain.Lake: return new THREE.Color(0x00dddd); // 湖泊 - 青色
+            default: return new THREE.Color(0x111111); // 未知 - 黑色
         }
     }
 
