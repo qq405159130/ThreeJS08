@@ -4,7 +4,6 @@ import { EventManager } from '../utils/EventManager';
 import { HexCellData } from '@/terrain/types';
 import { MapViewUtils } from '../terrain_view/MapViewUtils';
 import { eTerrain } from '@/terrain/enums';
-// import { HexCellRenderer } from '../terrain_view/HexCellRenderer';
 import { ServiceManager } from '@/utils/ServiceManager';
 import { Config } from '@/config';
 
@@ -13,12 +12,8 @@ export class HexCellViewMgr {
     private scene: THREE.Scene;
     private cellViews: Map<string, HexCellView> = new Map();
 
-    // private renderer: HexCellRenderer;
-
     constructor(scene: THREE.Scene) {
         this.scene = scene;
-
-        // this.renderer = new HexCellRenderer(scene);
     }
 
     /**
