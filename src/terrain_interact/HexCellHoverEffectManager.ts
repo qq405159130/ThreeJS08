@@ -84,11 +84,12 @@ export class HexCellHoverEffectManager {
         const material = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
             transparent: true,
-            opacity: 0.3,
+            opacity: 0.5,
             side: THREE.DoubleSide
         });
         this.selectionRect = new THREE.Mesh(geometry, material);
         this.selectionRect.visible = false; // 初始不可见
+        this.selectionRect.rotateX(Math.PI / 2);
         //避免干扰
         this.selectionRect.castShadow = false;
         this.selectionRect.receiveShadow = false;
@@ -108,7 +109,6 @@ export class HexCellHoverEffectManager {
     public updateSelectionRect(dragStart: THREE.Vector2, dragEnd: THREE.Vector2): void {
         if (!this.selectionRect) return;
         //打印dragStart,dragEnd
-        console.warn(`updateSelectionRect  (${dragStart.x}, ${dragStart.y})   (${dragEnd.x}, ${dragEnd.y})`)
         const minX = Math.min(dragStart.x, dragEnd.x);
         const maxX = Math.max(dragStart.x, dragEnd.x);
         const minY = Math.min(dragStart.y, dragEnd.y);
@@ -118,14 +118,16 @@ export class HexCellHoverEffectManager {
         const height = (maxY - minY) / window.innerHeight * 2; // 归一化到设备坐标
 
         // 更新矩形面的位置和大小
-        this.selectionRect.scale.set(width, height, 1);
+        this.selectionRect.scale.set(width * 100, height * 100, 1000);//随便给的值，调试用，总算能看到半透明面了；
         this.selectionRect.position.set(
             (minX + maxX) / window.innerWidth - 1, // 中心点 X
-            -(minY + maxY) / window.innerHeight + 1, // 中心点 Y
-            0
+            2,
+            -(minY + maxY) / window.innerHeight + 1 // 中心点 Y
         );
 
+        this.selectionRect.updateMatrix();
         this.selectionRect.visible = true;
+        console.warn(`updateSelectionRect  (${dragStart.x}, ${dragStart.y})   (${dragEnd.x}, ${dragEnd.y})`)
     }
 
     /**
