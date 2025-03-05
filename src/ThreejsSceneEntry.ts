@@ -3,6 +3,7 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 import { MyCameraControls } from './MyCameraControls';
 import { ServiceManager } from './utils/ServiceManager';
 import { eSceneMount, SceneManager } from './SceneManager';
+import { Config } from './config';
 
 export class ThreejsSceneTest {
     private scene: THREE.Scene;
@@ -49,7 +50,7 @@ export class ThreejsSceneTest {
         this.scene.background = new THREE.Color(0xffffff);
 
         // 添加调试辅助工具
-        this.debugHelpers();
+        Config.isDebugTool && this.debugHelpers();
 
         // 初始化地图渲染测试
         // this.initMapRenderTest();
@@ -72,7 +73,7 @@ export class ThreejsSceneTest {
         this.cameraControls.update(deltaTime);
 
         // 创建临时立方体
-        this.createTempCubes();
+        Config.isCreateTempCubes && this.createTempCubes();
 
         // 渲染场景
         this.renderer.render(this.scene, this.camera);
