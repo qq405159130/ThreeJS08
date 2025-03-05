@@ -31,6 +31,7 @@ export class HexCellHoverEffect {
             this.border.updateMatrix();
             this.mesh.add(this.border);
         }
+        this.border.visible = true;
 
         // 显示颜色叠加
         if (!this.overlay) {
@@ -47,6 +48,7 @@ export class HexCellHoverEffect {
             this.overlay.updateMatrix();
             this.mesh.add(this.overlay);
         }
+        this.overlay.visible = true;
 
         // 放大六边形
         this.mesh.scale.set(1.1, 1.1, 1.1); // 放大 10%
@@ -71,24 +73,22 @@ export class HexCellHoverEffect {
             this.selectOverlay.updateMatrix();
             this.mesh.add(this.selectOverlay);
         }
+        this.selectOverlay.visible = true;
     }
 
     /**
      * 隐藏 hover 效果
      */
     public hide(): void {
-        // 隐藏边框
         if (this.border) {
-            this.mesh.remove(this.border);
-            this.border = undefined;
+            this.border.visible = false;
         }
-
-        // 隐藏颜色叠加
         if (this.overlay) {
-            this.mesh.remove(this.overlay);
-            this.overlay = undefined;
+            this.overlay.visible = false;
         }
-
+        if (this.selectOverlay) {
+            this.selectOverlay.visible = false;
+        }
         // 恢复原始缩放
         this.mesh.scale.copy(this.originalScale);
     }
@@ -107,8 +107,21 @@ export class HexCellHoverEffect {
      * 销毁 hover 效果
      */
     public dispose(): void {
-        this.hide();
-        this.hideSelect();
+        if (this.border) {
+            this.mesh.remove(this.border);
+            this.border = undefined;
+        }
+
+        // 隐藏颜色叠加
+        if (this.overlay) {
+            this.mesh.remove(this.overlay);
+            this.overlay = undefined;
+        }
+
+        if (this.selectOverlay) {
+            this.mesh.remove(this.selectOverlay);
+            this.selectOverlay = undefined;
+        }
         this.mesh = null!;
     }
 }

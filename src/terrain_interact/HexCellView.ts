@@ -20,42 +20,42 @@ export class HexCellView {
         this.eventManager = eventManager;
     }
 
-    // 悬停事件
-    public onHoverStart(): void {
-        Config.isLogInterative && console.warn("onHover ~~~~~");
-        this.isHovered = true;
-        // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0xff0000); // 高亮红色
-        this.eventManager?.emit('cellHover', this);
-    }
+    // // 悬停事件
+    // public onHoverStart(): void {
+    //     Config.isLogInterative && console.warn("onHover ~~~~~");
+    //     this.isHovered = true;
+    //     // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0xff0000); // 高亮红色
+    //     this.eventManager?.emit('cellHover', this);
+    // }
 
-    // 悬停结束事件
-    public onHoverEnd(): void {
-        Config.isLogInterative && console.warn("onHoverEnd ~~~~~");
-        this.isHovered = false;
-        // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
-        this.eventManager?.emit('cellHoverEnd', this);
-    }
+    // // 悬停结束事件
+    // public onHoverEnd(): void {
+    //     Config.isLogInterative && console.warn("onHoverEnd ~~~~~");
+    //     this.isHovered = false;
+    //     // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
+    //     this.eventManager?.emit('cellHoverEnd', this);
+    // }
 
-    // 取消操作
-    public cancelAction(): void {
-        this.isSelected = false;
-        // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
-        this.eventManager?.emit('cellCancelAction', this);
-    }
+    // // 取消操作
+    // public cancelAction(): void {
+    //     this.isSelected = false;
+    //     // this.canShowInterative && (this.mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00); // 恢复绿色
+    //     this.eventManager?.emit('cellCancelAction', this);
+    // }
 
-    // 刚被算入框选范围。
-    public onSelectHoverStart(): void {
-        this.eventManager?.emit('cellSelectHover', this);
-    }
+    // // 刚被算入框选范围。
+    // public onSelectHoverStart(): void {
+    //     this.eventManager?.emit('cellSelectHover', this);
+    // }
 
-    // 刚被移出框选范围。
-    public onSelectHoverEnd(): void {
-        this.eventManager?.emit('cellSelectHoverEnd', this);
-    }
+    // // 刚被移出框选范围。
+    // public onSelectHoverEnd(): void {
+    //     this.eventManager?.emit('cellSelectHoverEnd', this);
+    // }
 
-    // 被选中
-    public onSelect(): void {
-        this.isSelected = true;
-        this.eventManager?.emit('cellSelect', this);
-    }
+    // // 被选中
+    // public onSelect(): void {
+    //     this.isSelected = true;
+    //     this.eventManager?.emit('cellSelect', this);
+    // }
 }
