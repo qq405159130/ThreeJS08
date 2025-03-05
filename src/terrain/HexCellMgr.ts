@@ -1,5 +1,7 @@
+import { Hex } from 'honeycomb-grid';
 import { HexCell } from './HexCell';
 import { HexCellData } from './types';
+import { eTerrain } from './enums';
 
 export class HexCellMgr {
     private ID: number = 0;
@@ -42,6 +44,13 @@ export class HexCellMgr {
 
     public getCellMap(): Map<string, HexCell> {
         return this.cells;
+    }
+
+    /** 获取特定类型的格子 */
+    public getCellsByTypes(types: eTerrain[]): HexCell[] {
+        return Array.from(this.cells.values()).filter((cell: HexCell) => {
+            return types.indexOf(cell.data.terrainType) !== -1;
+        });
     }
 
     // 清除所有单元格

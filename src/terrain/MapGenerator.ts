@@ -171,9 +171,7 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
             visitedCells.add(`${currentCell.data.q},${currentCell.data.r}`);
 
             // 获取当前单元格的邻居单元格
-            const neighbors = HexGridUtils.getNeighbors(currentCell.data.q, currentCell.data.r)
-                .map(coord => this.cellDatas.get(`${coord.q},${coord.r}`))
-                .filter(Boolean) as HexCell[];
+            const neighbors = currentCell.getNeighbors();
 
             // 找到高度最低的邻居单元格
             let nextCell = neighbors.reduce((lowest, cell) =>
@@ -217,10 +215,7 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
             if (latBand === latitudeBands - 1) baseHumidity = 0.2; // 极地低湿度
 
             // 根据水源调整湿度
-            const neighbors = HexGridUtils.getNeighbors(cell.data.q, cell.data.r)
-                .map(coord => this.cellDatas.get(`${coord.q},${coord.r}`))
-                .filter(Boolean) as HexCell[];
-
+            const neighbors = cell.getNeighbors();
             const waterSources = neighbors.filter(
                 neighbor => neighbor.data.terrainType === eTerrain.Ocean || neighbor.data.terrainType === eTerrain.Lake
             );
@@ -331,10 +326,7 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
     }
 
     private generateRoadsAroundCity(cityCell: HexCell): void {
-        const neighbors = HexGridUtils.getNeighbors(cityCell.data.q, cityCell.data.r)
-            .map(coord => this.cellDatas.get(`${coord.q},${coord.r}`))
-            .filter(Boolean) as HexCell[];
-
+        const neighbors = cityCell.getNeighbors();
         neighbors.forEach(neighbor => {
             if (neighbor.data.terrainType !== eTerrain.Ocean && Math.random() < 0.5) {
                 neighbor.data.isRoad = true;

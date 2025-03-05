@@ -1,4 +1,6 @@
+import { ServiceManager } from '@/utils/ServiceManager';
 import { eTerrain, eTerrainFace, eHeightLevel, eHumidityLevel, eBuild, eResource } from './enums';
+import { HexGridUtils } from './HexGridUtils';
 import type { HexCellData } from './types';
 
 export class HexCell {
@@ -44,8 +46,16 @@ export class HexCell {
         this._data.terrainFaceType = face;
     }
 
+    getNeighbors(): HexCell[] {
+        const cellDatas = ServiceManager.getInstance().getHexCellMgr().getCellMap();
+        const neighbors = HexGridUtils.getNeighbors(this.data.q, this.data.r)
+            .map(coord => cellDatas.get(`${coord.q},${coord.r}`))
+            .filter(Boolean) as HexCell[];
+        return neighbors;
+    }
+
     // 其他属性的设置方法...
 
 
-    
+
 }
