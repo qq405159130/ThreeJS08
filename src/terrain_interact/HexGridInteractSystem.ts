@@ -16,7 +16,7 @@ export class HexGridInteractSystem {
     private dragEnd: THREE.Vector2 = new THREE.Vector2(); // 拖动结束位置
     private eventManager: EventManager;
 
-    private hoverEffectManager: HexCellHoverEffectManager = new HexCellHoverEffectManager();
+    private hoverEffectManager: HexCellHoverEffectManager;
 
     constructor(
         private scene: THREE.Scene,
@@ -25,6 +25,7 @@ export class HexGridInteractSystem {
         eventManager: EventManager
     ) {
         this.eventManager = eventManager;
+        this.hoverEffectManager = new HexCellHoverEffectManager(scene); // 初始化 hoverEffectManager
         this.init();
     }
 
@@ -117,6 +118,12 @@ export class HexGridInteractSystem {
             this.hoveredCell.onHoverEnd(); // 结束悬停
             this.hoveredCell = null;
         }
+        console.warn(`onMouseMove  (${event.clientX}, ${event.clientY}) `)
+        // 更新框选矩形面
+        if (this.isDragging) {
+            this.dragEnd.set(event.clientX, event.clientY);
+            this.hoverEffectManager.updateSelectionRect(this.dragStart, this.dragEnd);
+        }
     }
 
     // 处理鼠标点击事件
@@ -124,7 +131,7 @@ export class HexGridInteractSystem {
         // 将鼠标位置归一化为设备坐标（-1到+1）
         this.mouse.x = MyCameraControls.isPointerLocked ? 0 : (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = MyCameraControls.isPointerLocked ? 0 : -(event.clientY / window.innerHeight) * 2 + 1;
-        
+
         // 更新光线投射器
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
@@ -160,6 +167,8 @@ export class HexGridInteractSystem {
         if (event.button === 0) { // 左键按下
             this.isDragging = true;
             this.dragStart.set(event.clientX, event.clientY);
+            this.dragEnd.set(event.clientX, event.clientY);
+            this.hoverEffectManager.createSelectionRect();
         }
     }
 
@@ -169,6 +178,7 @@ export class HexGridInteractSystem {
             this.isDragging = false;
             this.dragEnd.set(event.clientX, event.clientY);
             this.handleBoxSelect(event);
+            this.hoverEffectManager.removeSelectionRect();
         }
     }
 
