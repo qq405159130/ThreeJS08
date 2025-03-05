@@ -140,7 +140,7 @@ export class HexGridInteractSystem {
                 // 在非 Pointer Lock 模式下使用绝对坐标
                 this.dragEnd.set(event.clientX, event.clientY);
             }
-            this.hoverEffectManager.updateSelectionRect(this.dragStart, this.dragEnd);
+            this.hoverEffectManager.updateSelectionRect(this.dragStart, this.dragEnd, this.camera);
         }
     }
 
@@ -272,16 +272,19 @@ export class HexGridInteractSystem {
 
     // 处理框选悬停事件
     private handleCellSelectHover(cell: HexCellView): void {
+        Config.isLogInterative && console.warn("handleCellSelectHover ~~~~~");
         this.hoverEffectManager.showHoverEffect(cell.mesh);
     }
 
     // 处理框选悬停结束事件
     private handleCellSelectHoverEnd(cell: HexCellView): void {
+        Config.isLogInterative && console.warn("handleCellSelectHoverEnd ~~~~~");
         this.hoverEffectManager.hideHoverEffect();
     }
 
     // 处理选中事件
     private handleCellSelect(cell: HexCellView): void {
+        Config.isLogInterative && console.warn("handleCellSelect ~~~~~");
         this.hoverEffectManager.showSelectEffect(cell.mesh);
     }
 
