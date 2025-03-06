@@ -13,27 +13,6 @@ TERRAIN_TYPES = {
     "LAKE": 5
 }
 
-# 定义湿度等级
-HUMIDITY_LEVELS = {
-    "LOW": 0,
-    "MEDIUM": 1,
-    "HIGH": 2
-}
-
-# 定义高度等级
-HEIGHT_LEVELS = {
-    "LOW": 0,
-    "MEDIUM": 1,
-    "HIGH": 2
-}
-
-# 定义纬度等级
-LATITUDE_LEVELS = {
-    "LOW": 0,
-    "MEDIUM": 1,
-    "HIGH": 2
-}
-
 def get_terrain_type(color):
     """根据颜色判断地形类型"""
     r, g, b = color
@@ -53,39 +32,22 @@ def get_terrain_type(color):
         return TERRAIN_TYPES["PLAIN"]  # 默认平原
 
 def get_humidity_level(color):
-    """根据颜色判断湿度等级"""
+    """根据颜色判断湿度等级，取值范围 0~10"""
     r, g, b = color
-    if g > 200:  # 高湿度
-        return HUMIDITY_LEVELS["HIGH"]
-    elif g > 100:  # 中湿度
-        return HUMIDITY_LEVELS["MEDIUM"]
-    else:  # 低湿度
-        return HUMIDITY_LEVELS["LOW"]
+    return int((g / 255) * 10)  # 湿度范围为 0~10
 
 def get_height_level(color):
-    """根据颜色判断高度等级"""
+    """根据颜色判断高度等级，取值范围 0~255"""
     r, g, b = color
-    if r > 200:  # 高海拔
-        return HEIGHT_LEVELS["HIGH"]
-    elif r > 100:  # 中海拔
-        return HEIGHT_LEVELS["MEDIUM"]
-    else:  # 低海拔
-        return HEIGHT_LEVELS["LOW"]
+    return int(r)  # 高度范围为 0~255
 
 def get_latitude_level(y, height):
-    """根据Y坐标判断纬度等级"""
-    if y < height / 3:  # 低纬度
-        return LATITUDE_LEVELS["LOW"]
-    elif y < 2 * height / 3:  # 中纬度
-        return LATITUDE_LEVELS["MEDIUM"]
-    else:  # 高纬度
-        return LATITUDE_LEVELS["HIGH"]
+    """根据Y坐标判断纬度等级，取值范围 0~5"""
+    return int((y / height) * 5)  # 纬度范围为 0~5
 
-def sample_image(image, hex_size, sampling_method):
+def sample_image(image, hex_width, hex_height, sampling_method):
     """对图片进行六边形网格取样"""
     width, height = image.size
-    hex_width = hex_size * 2
-    hex_height = int(hex_size * np.sqrt(3))
     data = []
     index_x = 0
     index_y = 0
@@ -103,7 +65,7 @@ def sample_image(image, hex_size, sampling_method):
                     avg_color = np.mean(pixels, axis=0)
             else:
                 # 取样方式2：网格中心点的一定范围的所有像素平均
-                center_x = x + hex_size
+                center_x = x + hex_width // 2
                 center_y = y + hex_height // 2
                 pixels = []
                 for i in range(center_x - 5, center_x + 5):
@@ -135,9 +97,12 @@ def sample_image(image, hex_size, sampling_method):
 def main():
     # 弹出命令行窗口，提示用户选择尺寸
     print("本程序功能：读取地球地图图片，按照六边形网格取样，输出地形、湿度、高度、纬度信息。")
-    default_size = 20
-    size_input = input(f"请输入六边形网格尺寸（默认 {default_size}，直接回车使用默认值）：")
-    hex_size = int(size_input) if size_input else default_size
+    default_size = "30*20"  # 默认尺寸
+    size_input = input(f"请输入六边形网格尺寸（格式：宽度*高度，默认 {default_size}，直接回车使用默认值）：")
+    if size_input:
+        hex_width, hex_height = map(int, size_input.split("*"))
+    else:
+        hex_width, hex_height = map(int, default_size.split("*"))
 
     # 提示用户选择取样方式
     sampling_method = input("请输入取样方式（1: 网格内所有像素平均, 2: 网格中心点范围平均, 默认1）：")
@@ -152,7 +117,7 @@ def main():
     image = Image.open(image_path).convert("RGB")
 
     # 取样
-    data = sample_image(image, hex_size, sampling_method)
+    data = sample_image(image, hex_width, hex_height, sampling_method)
 
     # 保存为JSON文件
     output_path = "map_data.json"
