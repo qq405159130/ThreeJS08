@@ -81,6 +81,10 @@ def flatten_and_save_structure(root_folder, src_relative, dest_relative, structu
         f.write(f"{src_folder}\n")  # 使用完整路径
         write_tree(src_folder)
 
+    # 统计信息
+    file_count = 0
+    total_lines = 0
+
     # 如果需要合并文件内容
     if merge_files:
         all_code_file = os.path.join(dest_folder, "__src_allCode.txt")
@@ -98,7 +102,12 @@ def flatten_and_save_structure(root_folder, src_relative, dest_relative, structu
                         all_code.write(f"\n\n// === File: {file} ===\n\n")
                         # 写入文件内容
                         with open(file_path, 'r', encoding='utf-8') as src_file:
-                            all_code.write(src_file.read())
+                            content = src_file.read()
+                            all_code.write(content)
+                            # 统计行数
+                            lines = content.splitlines()
+                            total_lines += len(lines)
+                            file_count += 1
 
     # 复制文件到目标文件夹
     for root, dirs, files in os.walk(src_folder):
@@ -112,11 +121,19 @@ def flatten_and_save_structure(root_folder, src_relative, dest_relative, structu
                 dest_file_path = os.path.join(dest_folder, file)
                 # 直接覆盖文件
                 shutil.copy2(src_file_path, dest_file_path)
+                # 统计行数
+                with open(src_file_path, 'r', encoding='utf-8') as src_file:
+                    lines = src_file.readlines()
+                    total_lines += len(lines)
+                    file_count += 1
 
     print(f"所有文件已复制到: {dest_folder}")
     print(f"目录结构已保存到: {structure_file}")
     if merge_files:
         print(f"所有文件内容已合并到: {os.path.join(dest_folder, '__src_allCode.txt')}")
+
+    # 返回统计信息
+    return file_count, total_lines
 
 def merge_game_files(root_folder, game_relative, dest_relative):
     # 构建完整路径
@@ -131,17 +148,26 @@ def merge_game_files(root_folder, game_relative, dest_relative):
     # 需要合并的文件列表
     files_to_merge = ["index.html", "package.json", "tsconfig.json", "vite.config.ts"]
 
+    file_line_counts = {}
+
     with open(merged_file, 'w', encoding='utf-8') as merged:
         for file_name in files_to_merge:
             file_path = os.path.join(game_folder, file_name)
             if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
                 merged.write(f"\n\n// === File: {file_name} ===\n\n")
                 with open(file_path, 'r', encoding='utf-8') as src_file:
-                    merged.write(src_file.read())
+                    content = src_file.read()
+                    merged.write(content)
+                    # 统计行数
+                    lines = content.splitlines()
+                    file_line_counts[file_name] = len(lines)
             else:
                 print(f"文件 {file_name} 为空或不存在，跳过合并。")
 
     print(f"特定文件已合并到: {merged_file}")
+
+    # 返回统计信息
+    return file_line_counts
 
 def save_public_structure(root_folder, public_relative, structure_relative):
     # 构建完整路径
@@ -170,7 +196,28 @@ def save_public_structure(root_folder, public_relative, structure_relative):
         f.write(f"{public_folder}\n")  # 使用完整路径
         write_tree(public_folder)
 
+    # 统计信息
+    total_files = 0
+    total_size = 0
+    file_type_stats = {}
+
+    for root, dirs, files in os.walk(public_folder):
+        for file in files:
+            file_path = os.path.join(root, file)
+            file_size = os.path.getsize(file_path)
+            total_files += 1
+            total_size += file_size
+            ext = os.path.splitext(file)[1].lower()
+            if ext in file_type_stats:
+                file_type_stats[ext]['count'] += 1
+                file_type_stats[ext]['size'] += file_size
+            else:
+                file_type_stats[ext] = {'count': 1, 'size': file_size}
+
     print(f"public目录结构已保存到: {structure_file}")
+
+    # 返回统计信息
+    return total_files, total_size, file_type_stats
 
 def show_options():
     # 创建Tkinter根窗口
@@ -208,14 +255,14 @@ def show_options():
     # 根据用户输入执行相应功能
     if user_input == "":
         # 默认功能：合并文件
-        flatten_and_save_structure(root_folder, src_relative, dest_relative, structure_relative, merge_files=True)
-        merge_game_files(root_folder, game_relative, dest_relative)
-        save_public_structure(root_folder, public_relative, public_structure_relative)
+        file_count, total_lines = flatten_and_save_structure(root_folder, src_relative, dest_relative, structure_relative, merge_files=True)
+        file_line_counts = merge_game_files(root_folder, game_relative, dest_relative)
+        total_files, total_size, file_type_stats = save_public_structure(root_folder, public_relative, public_structure_relative)
     elif user_input == "1":
         # 选项1：不合并文件
-        flatten_and_save_structure(root_folder, src_relative, dest_relative, structure_relative, merge_files=False)
-        merge_game_files(root_folder, game_relative, dest_relative)
-        save_public_structure(root_folder, public_relative, public_structure_relative)
+        file_count, total_lines = flatten_and_save_structure(root_folder, src_relative, dest_relative, structure_relative, merge_files=False)
+        file_line_counts = merge_game_files(root_folder, game_relative, dest_relative)
+        total_files, total_size, file_type_stats = save_public_structure(root_folder, public_relative, public_structure_relative)
     elif user_input == "2":
         # 选项2：仅输出目录结构和合并后的代码
         # 删除目标文件夹（如果存在）
@@ -239,6 +286,8 @@ def show_options():
             write_tree(src_relative)
 
         all_code_file = os.path.join(dest_relative, "__src_allCode.txt")
+        file_count = 0  # 初始化文件数量
+        total_lines = 0  # 初始化总代码行数
         with open(all_code_file, 'w', encoding='utf-8') as all_code:
             for root, dirs, files in os.walk(src_relative):
                 for file in files:
@@ -246,15 +295,41 @@ def show_options():
                         file_path = os.path.join(root, file)
                         all_code.write(f"\n\n// === File: {file} ===\n\n")
                         with open(file_path, 'r', encoding='utf-8') as src_file:
-                            all_code.write(src_file.read())
+                            content = src_file.read()
+                            all_code.write(content)
+                            # 统计行数
+                            lines = content.splitlines()
+                            total_lines += len(lines)
+                            file_count += 1
 
-        merge_game_files(root_folder, game_relative, dest_relative)
-        save_public_structure(root_folder, public_relative, public_structure_relative)
+        file_line_counts = merge_game_files(root_folder, game_relative, dest_relative)
+        total_files, total_size, file_type_stats = save_public_structure(root_folder, public_relative, public_structure_relative)
 
         print(f"目录结构已保存到: {structure_relative}")
         print(f"所有文件内容已合并到: {all_code_file}")
     else:
         print("无效的选项，程序退出。")
+        return
+
+    # 输出统计信息
+    print("\n=== 统计信息 ===")
+    print(f"功能①②③：")
+    print(f"  文件数量: {file_count}")
+    print(f"  总代码行数: {total_lines}")
+    print(f"  平均代码行数: {total_lines / file_count if file_count > 0 else 0}")
+
+    print(f"\n功能④：")
+    for file_name, line_count in file_line_counts.items():
+        print(f"  {file_name}: {line_count} 行")
+
+    print(f"\n功能⑤：")
+    print(f"  总文件数量: {total_files}")
+    print(f"  总空间大小: {total_size} 字节")
+    for ext, stats in file_type_stats.items():
+        print(f"  {ext} 文件: {stats['count']} 个, {stats['size']} 字节, 占比 {stats['size'] / total_size * 100:.2f}%")
+
+    # 提示用户按回车结束
+    input("\n已结束，回车可结束。")
 
 if __name__ == "__main__":
     show_options()
