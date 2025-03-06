@@ -4,10 +4,10 @@ import { ClimateZoneStats, MapStatistics, ResourceStats, RiverStats, TerrainStat
 export class StatisticsLogger {
     static log(stats: MapStatistics) {
         console.groupCollapsed('=== 地图统计详情 ===');
-        this.logTerrain(stats.terrain);
-        this.logResources(stats.resources);
-        this.logRivers(stats.rivers);
-        this.logClimateZones(stats.climateZones);
+        if (stats.terrain) this.logTerrain(stats.terrain);
+        if (stats.resources) this.logResources(stats.resources);
+        if (stats.rivers) this.logRivers(stats.rivers);
+        if (stats.climateZones) this.logClimateZones(stats.climateZones);
         console.groupEnd();
     }
 
