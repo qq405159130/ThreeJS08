@@ -43,8 +43,8 @@ export class MapMainConstructor {
     }
 
     // 更新地图
-    public updateMap(): void {
-        this.hexGridInteractSystem.update();
+    public updateMap(deltaTime: number): void {
+        this.hexGridInteractSystem.update(deltaTime);
     }
 
     // 获取HexCellMgr

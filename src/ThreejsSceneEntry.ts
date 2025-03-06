@@ -78,7 +78,7 @@ export class ThreejsSceneTest {
         // 渲染场景
         this.renderer.render(this.scene, this.camera);
 
-        this.updateService();
+        this.updateService(deltaTime);
 
         this.stats.end();
         requestAnimationFrame(() => this.animate());
@@ -100,8 +100,8 @@ export class ThreejsSceneTest {
         this.serviceManager.initialize(this.scene, this.camera, this.renderer);
     }
 
-    private updateService(): void {
-        this.serviceManager?.updateFrame();
+    private updateService(deltaTime: number): void {
+        this.serviceManager?.updateFrame(deltaTime);
     }
 
     private debugHelpers(): void {

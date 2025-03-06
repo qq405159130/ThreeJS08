@@ -40,11 +40,11 @@ export class ServiceManager {
         await this.mapMainConstructor.initializeMap();
     }
 
-    public updateFrame(): void {
-        this.mapMainConstructor?.updateMap();
+    public updateFrame(deltaTime: number): void {
+        this.mapMainConstructor?.updateMap(deltaTime);
         
         // 更新交互系统
-        this.getHexGridInteractSystem().update();
+        this.getHexGridInteractSystem().update(deltaTime);
     }
 
     public getMapMainConstructor(): MapMainConstructor {

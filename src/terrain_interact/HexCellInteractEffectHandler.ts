@@ -13,6 +13,20 @@ export class HexCellInteractEffectHandler {
 
     }
 
+
+    /**
+     * 销毁所有 hover 效果
+     */
+    public dispose(): void {
+        this.hoverEffects.forEach((hoverEffect) => hoverEffect.dispose());
+        this.hoverEffects.clear();
+    }
+
+    public update(deltaTime: number): void {
+        this.currentHoverEffect.forEach(effect => effect.update(deltaTime));
+        this.currentSelectEffects.forEach(effect => effect.update(deltaTime));
+    }
+
     /**
      * 获取或创建 hover 效果
      * @param mesh 六边形网格
@@ -106,11 +120,4 @@ export class HexCellInteractEffectHandler {
         this.currentSelectEffects.length = 0;
     }
 
-    /**
-     * 销毁所有 hover 效果
-     */
-    public dispose(): void {
-        this.hoverEffects.forEach((hoverEffect) => hoverEffect.dispose());
-        this.hoverEffects.clear();
-    }
 }
