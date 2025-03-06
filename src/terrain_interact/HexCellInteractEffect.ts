@@ -15,6 +15,9 @@ export class HexCellInteractEffect {
     private hoverColor: THREE.Color = new THREE.Color(0xffa500); // 悬停颜色（橙色）
     private selectColor: THREE.Color = new THREE.Color(0xff0000); // 选中颜色（红色）
     private time: number = 0; // 用于动画的时间变量
+    private particleLifetime: number = 0; // 每个粒子的生命周期
+    private isParticleActive: boolean = false; // 粒子效果是否激活
+    private readonly particleCount: number = 20;
 
     constructor() {
 
@@ -71,12 +74,24 @@ export class HexCellInteractEffect {
         }
 
         // 粒子扩散效果
-        if (this.particles && this.particleGeometry) {
+        if (this.isParticleActive && this.particles && this.particleGeometry) {
+            // 粒子扩散效果
             const positions = this.particleGeometry.attributes.position.array as Float32Array;
             for (let i = 0; i < positions.length; i += 3) {
-                positions[i] *= 1.01; // 向外扩散
-                positions[i + 1] *= 1.01;
-                positions[i + 2] *= 1.01;
+                if (this.particleLifetime > 2) {
+                    // 重置粒子位置和生命周期
+                    positions[i] = 0;
+                    positions[i + 1] = 0;
+                    positions[i + 2] = 0;
+                    this.particleLifetime = 0;
+                } else {
+                    // 粒子向外扩散
+                    const speed = 2; // 扩散速度
+                    positions[i] += (Math.random() - 0.5) * speed * deltaTime;
+                    positions[i + 1] += (Math.random() - 0.5) * speed * deltaTime;
+                    positions[i + 2] += (Math.random() - 0.5) * speed * deltaTime;
+                    this.particleLifetime += deltaTime;
+                }
             }
             this.particleGeometry.attributes.position.needsUpdate = true;
         }
@@ -106,7 +121,21 @@ export class HexCellInteractEffect {
         this.isSelected = true;
         if (this.selectBorder) this.selectBorder.visible = true;
         if (this.selectOverlay) this.selectOverlay.visible = true;
-        if (this.particles) this.particles.visible = true;
+        if (this.particles) {
+            this.particles.visible = true;
+            this.isParticleActive = true; // 激活粒子效果
+            // 重置粒子位置和生命周期
+            if (this.particleGeometry) {
+                const positions = this.particleGeometry.attributes.position.array as Float32Array;
+                for (let i = 0; i < positions.length; i += 3) {
+                    positions[i] = 0; // 重置到中心
+                    positions[i + 1] = 0;
+                    positions[i + 2] = 0;
+                }
+                this.particleGeometry.attributes.position.needsUpdate = true;
+                this.particleLifetime = 0; // 重置生命周期
+            }
+        }
         this.mesh.scale.set(1.2, 1.2, 1.2); // 放大 20%
     }
 
@@ -116,7 +145,10 @@ export class HexCellInteractEffect {
         this.isSelected = false;
         if (this.selectBorder) this.selectBorder.visible = false;
         if (this.selectOverlay) this.selectOverlay.visible = false;
-        if (this.particles) this.particles.visible = false;
+        if (this.particles) {
+            this.particles.visible = false;
+            this.isParticleActive = false; // 停止粒子效果
+        }
         this.mesh.scale.copy(this.originalScale || new THREE.Vector3(1, 1, 1)); // 恢复原始大小
     }
 
@@ -219,9 +251,8 @@ export class HexCellInteractEffect {
         if (!this.mesh)
             return;
         if (!this.particleGeometry) {
-            const particleCount = 50;
-            const positions = new Float32Array(particleCount * 3);
-            for (let i = 0; i < particleCount; i++) {
+            const positions = new Float32Array(this.particleCount * 3);
+            for (let i = 0; i < this.particleCount; i++) {
                 const theta = Math.random() * Math.PI * 2;
                 const phi = Math.random() * Math.PI;
                 const radius = Math.random() * 1.5;
