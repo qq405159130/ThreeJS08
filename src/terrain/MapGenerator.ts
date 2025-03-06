@@ -8,6 +8,9 @@ import type { MapInfo, HexCellData } from './types';
 import { ServiceManager } from '@/utils/ServiceManager';
 import { NoiseTextureLoader } from './NoiseTextureLoader';
 import { logExecutionTime } from '@/_decorator/logExecutionTime';
+import { MapStatistics } from '@/terrain_statistics/TerrainStatsTypes';
+import { MapStatisticsCoordinator } from '@/terrain_statistics/MapStatisticsCoordinator';
+import { StatisticsLogger } from '@/terrain_statistics/StatisticsLogger';
 
 export class MapGenerator {
     private get cellDatas(): Map<string, HexCell> {
@@ -46,6 +49,7 @@ export class MapGenerator {
         await this.generateTerrainFace();
         await this.generateResources();
         await this.generateCities();
+        this.showStatistics();
         return Array.from(this.cellDatas.values()).map(cell => cell.data);
     }
 
@@ -359,5 +363,16 @@ export class MapGenerator {
                 neighbor.data.isRoad = true;
             }
         });
+    }
+
+    private statisticsCoordinator = new MapStatisticsCoordinator();
+    private getStatistics(): MapStatistics {
+        const cells = Array.from(this.cellDatas.values());
+        return this.statisticsCoordinator.generate(cells);
+    }
+
+    private showStatistics(): void {
+        const stats = this.getStatistics();
+        StatisticsLogger.log(stats);
     }
 }
