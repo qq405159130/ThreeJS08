@@ -45,6 +45,23 @@ def get_latitude_level(y, height):
     """根据Y坐标判断纬度等级，取值范围 0~5"""
     return int((y / height) * 5)  # 纬度范围为 0~5
 
+def normalize_heights(data):
+    """将高度值映射到 0~255 的范围内"""
+    heights = [d["height"] for d in data]
+    min_height = min(heights)
+    max_height = max(heights)
+
+    if min_height == max_height:
+        # 如果所有高度值相同，直接设置为 128
+        for d in data:
+            d["height"] = 128
+    else:
+        # 线性映射到 0~255
+        for d in data:
+            d["height"] = int(((d["height"] - min_height) / (max_height - min_height)) * 255)
+
+    return data
+
 def sample_image(image, hex_width, hex_height, sampling_method):
     """对图片进行六边形网格取样"""
     width, height = image.size
@@ -95,8 +112,20 @@ def sample_image(image, hex_width, hex_height, sampling_method):
     return data
 
 def main():
-    # 弹出命令行窗口，提示用户选择尺寸
-    print("本程序功能：读取地球地图图片，按照六边形网格取样，输出地形、湿度、高度、纬度信息。")
+    # 弹出命令行窗口，提示用户输入文件名
+    default_image_name = "temp_map.png"
+    image_name = input(f"请输入地图图片文件名（默认 {default_image_name}，直接回车使用默认值）：")
+    image_name = image_name if image_name else default_image_name
+
+    # 检查文件是否存在
+    if not os.path.exists(image_name):
+        print(f"图片文件 {image_name} 不存在！")
+        return
+
+    # 读取地图图片
+    image = Image.open(image_name).convert("RGB")
+
+    # 提示用户选择尺寸
     default_size = "30*20"  # 默认尺寸
     size_input = input(f"请输入六边形网格尺寸（格式：宽度*高度，默认 {default_size}，直接回车使用默认值）：")
     if size_input:
@@ -108,16 +137,13 @@ def main():
     sampling_method = input("请输入取样方式（1: 网格内所有像素平均, 2: 网格中心点范围平均, 默认1）：")
     sampling_method = int(sampling_method) if sampling_method else 1
 
-    # 读取地图图片
-    image_path = "earth_map.png"  # 替换为你的地图图片路径
-    if not os.path.exists(image_path):
-        print(f"图片文件 {image_path} 不存在！")
-        return
-
-    image = Image.open(image_path).convert("RGB")
-
     # 取样
     data = sample_image(image, hex_width, hex_height, sampling_method)
+
+    # 提示用户是否填满高度
+    fill_height = input("是否填满高度（y/n，默认 n）：")
+    if fill_height.lower() == 'y':
+        data = normalize_heights(data)
 
     # 保存为JSON文件
     output_path = "map_data.json"
