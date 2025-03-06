@@ -13,6 +13,16 @@ TERRAIN_TYPES = {
     "LAKE": 5
 }
 
+# 定义地形名称
+TERRAIN_NAMES = {
+    0: "海洋",
+    1: "平原",
+    2: "丘陵",
+    3: "山地",
+    4: "高山",
+    5: "湖泊"
+}
+
 def get_terrain_type(color):
     """根据颜色判断地形类型"""
     r, g, b = color
@@ -111,6 +121,52 @@ def sample_image(image, hex_width, hex_height, sampling_method):
 
     return data
 
+def show_statistics(data):
+    """显示统计信息"""
+    total_cells = len(data)
+
+    # a. 各地形数量及占比
+    terrain_counts = {}
+    for d in data:
+        terrain = d["terrain"]
+        terrain_name = TERRAIN_NAMES.get(terrain, "未知")
+        terrain_counts[terrain_name] = terrain_counts.get(terrain_name, 0) + 1
+
+    print("\n=== 各地形数量及占比 ===")
+    for terrain, count in terrain_counts.items():
+        percentage = (count / total_cells) * 100
+        print(f"{terrain}: {count} 个，占比 {percentage:.2f}%")
+
+    # b. 各高度占比
+    height_bins = [0, 50, 100, 150, 200, 255]
+    height_counts = {f"{height_bins[i]}-{height_bins[i+1]}": 0 for i in range(len(height_bins) - 1)}
+    for d in data:
+        height = d["height"]
+        for i in range(len(height_bins) - 1):
+            if height_bins[i] <= height < height_bins[i + 1]:
+                height_counts[f"{height_bins[i]}-{height_bins[i+1]}"] += 1
+                break
+
+    print("\n=== 各高度占比 ===")
+    for range_, count in height_counts.items():
+        percentage = (count / total_cells) * 100
+        print(f"高度 {range_}: {count} 个，占比 {percentage:.2f}%")
+
+    # c. 各湿度占比
+    humidity_bins = [0, 3, 6, 10]
+    humidity_counts = {f"{humidity_bins[i]}-{humidity_bins[i+1]}": 0 for i in range(len(humidity_bins) - 1)}
+    for d in data:
+        humidity = d["humidity"]
+        for i in range(len(humidity_bins) - 1):
+            if humidity_bins[i] <= humidity < humidity_bins[i + 1]:
+                humidity_counts[f"{humidity_bins[i]}-{humidity_bins[i+1]}"] += 1
+                break
+
+    print("\n=== 各湿度占比 ===")
+    for range_, count in humidity_counts.items():
+        percentage = (count / total_cells) * 100
+        print(f"湿度 {range_}: {count} 个，占比 {percentage:.2f}%")
+
 def main():
     # 弹出命令行窗口，提示用户输入文件名
     default_image_name = "temp_map.png"
@@ -141,16 +197,24 @@ def main():
     data = sample_image(image, hex_width, hex_height, sampling_method)
 
     # 提示用户是否填满高度
-    fill_height = input("是否填满高度（y/n，默认 n）：")
-    if fill_height.lower() == 'y':
+    fill_height = input("是否填满高度（y/n，默认 y）：")
+    if fill_height.lower() != 'n':
         data = normalize_heights(data)
 
+    # 提示用户是否显示统计信息
+    show_stats = input("是否显示统计信息（y/n，默认 y）：")
+    if show_stats.lower() != 'n':
+        show_statistics(data)
+
+    
     # 保存为JSON文件
     output_path = "map_data.json"
     with open(output_path, "w") as f:
         json.dump(data, f, indent=4)
 
     print(f"取样完成，结果已保存到 {output_path}")
+
+    input("已结束，回车可关闭窗口")
 
 if __name__ == "__main__":
     main()
