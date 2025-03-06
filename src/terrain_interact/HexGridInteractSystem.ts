@@ -3,7 +3,7 @@ import { HexCellView } from './HexCellView';
 import { EventManager } from '../utils/EventManager';
 import { ServiceManager } from '@/utils/ServiceManager';
 import { MyCameraControls } from '@/MyCameraControls';
-import { HexCellHoverEffectManager } from './HexCellHoverEffectManager';
+import { HexCellInteractEffectHandler } from './HexCellInteractEffectHandler';
 import { Config } from '@/config';
 import { HexCellRectSelectView } from './HexCellRectSelectView';
 
@@ -18,7 +18,7 @@ export class HexGridInteractSystem {
     private dragEnd: THREE.Vector2 = new THREE.Vector2(); // 拖动结束位置
     private eventManager: EventManager;
 
-    private hoverEffectManager: HexCellHoverEffectManager;
+    private hoverEffectManager: HexCellInteractEffectHandler;
     private rectSelectView: HexCellRectSelectView;
 
     constructor(
@@ -28,7 +28,7 @@ export class HexGridInteractSystem {
         eventManager: EventManager
     ) {
         this.eventManager = eventManager;
-        this.hoverEffectManager = new HexCellHoverEffectManager(); // 初始化 hoverEffectManager
+        this.hoverEffectManager = new HexCellInteractEffectHandler(); // 初始化 hoverEffectManager
         this.rectSelectView = new HexCellRectSelectView(scene);
         this.init();
     }

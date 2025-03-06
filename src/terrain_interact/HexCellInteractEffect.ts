@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export class HexCellHoverEffect {
+export class HexCellInteractEffect {
     private mesh?: THREE.Mesh; // 六边形网格
     private border?: THREE.LineSegments; // 边框
     private overlay?: THREE.Mesh; // 颜色叠加

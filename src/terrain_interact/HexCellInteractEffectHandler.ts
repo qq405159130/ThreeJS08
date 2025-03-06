@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { HexCellHoverEffect } from './HexCellHoverEffect';
+import { HexCellInteractEffect } from './HexCellInteractEffect';
 // import { Pool } from 'object-pool';
 
-export class HexCellHoverEffectManager {
-    private hoverEffects: Map<THREE.Mesh, HexCellHoverEffect> = new Map(); // 六边形网格与 hover 效果的映射
-    private currentHoverEffect: HexCellHoverEffect[] = []; // 当前 hover 的效果
-    private currentSelectEffects: HexCellHoverEffect[] = []; // 当前选中的效果
+export class HexCellInteractEffectHandler {
+    private hoverEffects: Map<THREE.Mesh, HexCellInteractEffect> = new Map(); // 六边形网格与 hover 效果的映射
+    private currentHoverEffect: HexCellInteractEffect[] = []; // 当前 hover 的效果
+    private currentSelectEffects: HexCellInteractEffect[] = []; // 当前选中的效果
 
     // private pool: Pool<HexCellHoverEffect> = new Pool();
 
@@ -18,10 +18,10 @@ export class HexCellHoverEffectManager {
      * @param mesh 六边形网格
      * @returns hover 效果
      */
-    private getHoverEffect(mesh: THREE.Mesh): HexCellHoverEffect {
+    private getHoverEffect(mesh: THREE.Mesh): HexCellInteractEffect {
         let hoverEffect = this.hoverEffects.get(mesh);
         if (!hoverEffect) {
-            hoverEffect = new HexCellHoverEffect();
+            hoverEffect = new HexCellInteractEffect();
             hoverEffect.init(mesh);
             this.hoverEffects.set(mesh, hoverEffect);
         }
@@ -32,7 +32,7 @@ export class HexCellHoverEffectManager {
         // return hoverEffect;
     }
 
-    private restoreEffect(effect: HexCellHoverEffect): void {
+    private restoreEffect(effect: HexCellInteractEffect): void {
         // this.pool.release(effect);
     }
 
