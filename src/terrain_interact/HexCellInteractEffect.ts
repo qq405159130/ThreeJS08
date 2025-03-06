@@ -34,10 +34,10 @@ export class HexCellInteractEffect {
             this.border.name = 'border';
             this.border.matrixAutoUpdate = false;
             this.border.updateMatrix();
+            this.border.visible = false;
             this.mesh.add(this.border);
         }
-        else
-        {
+        else {
             this.border.position.x = this.mesh.position.x;
             this.border.position.y = this.mesh.position.y;
             this.border.position.z = this.mesh.position.z;
@@ -59,10 +59,11 @@ export class HexCellInteractEffect {
             this.overlay.name = 'overlay';
             this.overlay.matrixAutoUpdate = false;
             this.overlay.updateMatrix();
+            this.overlay.visible = false;
             this.mesh.add(this.overlay);
+
         }
-        else
-        {
+        else {
             this.overlay.position.x = this.mesh.position.x;
             this.overlay.position.y = this.mesh.position.y;
             this.overlay.position.z = this.mesh.position.z;
@@ -74,7 +75,7 @@ export class HexCellInteractEffect {
             return;
         if (!this.selectOverlay) {
             const selectOverlayGeometry = this.mesh.geometry.clone();
-            const selectOverlayMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+            const selectOverlayMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.9 });
             this.selectOverlay = new THREE.Mesh(selectOverlayGeometry, selectOverlayMaterial);
             //避免干扰
             this.selectOverlay.castShadow = false;
@@ -84,10 +85,10 @@ export class HexCellInteractEffect {
             this.selectOverlay.name = 'selectOverlay';
             this.selectOverlay.matrixAutoUpdate = false;
             this.selectOverlay.updateMatrix();
+            this.selectOverlay.visible = false;
             this.mesh.add(this.selectOverlay);
         }
-        else
-        {
+        else {
             this.selectOverlay.position.x = this.mesh.position.x;
             this.selectOverlay.position.y = this.mesh.position.y;
             this.selectOverlay.position.z = this.mesh.position.z;
@@ -110,7 +111,7 @@ export class HexCellInteractEffect {
 
         // 放大六边形
         this.mesh.scale.set(1.1, 1.1, 1.1); // 放大 10%
-        // console.warn("显示 hover");
+        // console.warn(`显示 hover`);
     }
 
     /**
@@ -137,6 +138,7 @@ export class HexCellInteractEffect {
         }
         // 恢复原始缩放
         this.mesh?.scale.copy(this.originalScale ? this.originalScale : new THREE.Vector3(1, 1, 1));
+        // console.warn(`显示 不hover`);
     }
 
     /**
@@ -146,7 +148,7 @@ export class HexCellInteractEffect {
         if (this.selectOverlay) {
             this.selectOverlay.visible = false;
         }
-        // console.warn("显示 不选");
+        // console.warn(`显示 不选  ${this.overlay?.visible}  ${this.selectOverlay?.visible}`);
     }
 
     /**
