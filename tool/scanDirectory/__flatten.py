@@ -3,6 +3,49 @@ import shutil
 import tkinter as tk
 from tkinter import messagebox
 
+def is_fully_commented(file_path):
+    # 根据文件扩展名确定注释符号
+    ext = os.path.splitext(file_path)[1]
+    if ext in ('.ts', '.tsx', '.js'):
+        single_line_comment = '//'
+        multi_line_comment_start = '/*'
+        multi_line_comment_end = '*/'
+    elif ext == '.css':
+        single_line_comment = None
+        multi_line_comment_start = '/*'
+        multi_line_comment_end = '*/'
+    elif ext == '.html':
+        single_line_comment = None
+        multi_line_comment_start = '<!--'
+        multi_line_comment_end = '-->'
+    else:
+        return False  # 不支持的文件类型，默认不跳过
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    # 检查每一行是否被注释
+    in_multi_line_comment = False
+    for line in lines:
+        stripped_line = line.strip()
+        if not stripped_line:  # 空行跳过
+            continue
+
+        if in_multi_line_comment:
+            if multi_line_comment_end in stripped_line:
+                in_multi_line_comment = False
+            continue
+        elif single_line_comment and stripped_line.startswith(single_line_comment):
+            continue
+        elif stripped_line.startswith(multi_line_comment_start):
+            if multi_line_comment_end not in stripped_line:
+                in_multi_line_comment = True
+            continue
+        else:
+            return False  # 发现未注释的行
+
+    return True  # 所有行都被注释
+
 def flatten_and_save_structure(root_folder, src_relative, dest_relative, structure_relative, merge_files=False):
     # 构建完整路径
     src_folder = os.path.join(root_folder, src_relative)
@@ -47,6 +90,10 @@ def flatten_and_save_structure(root_folder, src_relative, dest_relative, structu
                 for file in files:
                     if file.endswith(('.ts', '.tsx', '.css', '.html', '.js')):
                         file_path = os.path.join(root, file)
+                        # 检查文件是否全部被注释
+                        if is_fully_commented(file_path):
+                            print(f"文件 {file} 被完全注释，跳过处理。")
+                            continue
                         # 写入文件名作为分隔符
                         all_code.write(f"\n\n// === File: {file} ===\n\n")
                         # 写入文件内容
@@ -58,8 +105,11 @@ def flatten_and_save_structure(root_folder, src_relative, dest_relative, structu
         for file in files:
             if file.endswith(('.ts', '.tsx', '.css', '.html', '.js')):
                 src_file_path = os.path.join(root, file)
+                # 检查文件是否全部被注释
+                if is_fully_commented(src_file_path):
+                    print(f"文件 {file} 被完全注释，跳过处理。")
+                    continue
                 dest_file_path = os.path.join(dest_folder, file)
-
                 # 直接覆盖文件
                 shutil.copy2(src_file_path, dest_file_path)
 
