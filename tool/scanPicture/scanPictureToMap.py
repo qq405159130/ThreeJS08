@@ -87,6 +87,8 @@ def sample_image(image, hex_size, sampling_method):
     hex_width = hex_size * 2
     hex_height = int(hex_size * np.sqrt(3))
     data = []
+    index_x = 0
+    index_y = 0
 
     for y in range(0, height, hex_height):
         for x in range(0, width, hex_width):
@@ -117,44 +119,47 @@ def sample_image(image, hex_size, sampling_method):
                 height_level = get_height_level(avg_color)
                 latitude_level = get_latitude_level(y, height)
                 data.append({
-                    "x": x,
-                    "y": y,
+                    "x": index_x,  # 使用索引值
+                    "y": index_y,  # 使用索引值
                     "terrain": terrain_type,
                     "humidity": humidity_level,
                     "height": height_level,
                     "latitude": latitude_level
                 })
+            index_x += 1
+        index_x = 0
+        index_y += 1
 
     return data
 
 def main():
-    try:
-        # 弹出命令行窗口，提示用户选择取样方式
-        print("本程序功能：读取地球地图图片，按照六边形网格取样，输出地形、湿度、高度、纬度信息。")
-        sampling_method = input("请输入取样方式（1: 网格内所有像素平均, 2: 网格中心点范围平均, 默认1）：")
-        sampling_method = int(sampling_method) if sampling_method else 1
+    # 弹出命令行窗口，提示用户选择尺寸
+    print("本程序功能：读取地球地图图片，按照六边形网格取样，输出地形、湿度、高度、纬度信息。")
+    default_size = 20
+    size_input = input(f"请输入六边形网格尺寸（默认 {default_size}，直接回车使用默认值）：")
+    hex_size = int(size_input) if size_input else default_size
 
-        # 读取地图图片
-        image_path = "earth_map.png"  # 替换为你的地图图片路径
-        if not os.path.exists(image_path):
-            print(f"图片文件 {image_path} 不存在！")
-            return
+    # 提示用户选择取样方式
+    sampling_method = input("请输入取样方式（1: 网格内所有像素平均, 2: 网格中心点范围平均, 默认1）：")
+    sampling_method = int(sampling_method) if sampling_method else 1
 
-        image = Image.open(image_path).convert("RGB")
-        hex_size = 20  # 六边形网格大小
+    # 读取地图图片
+    image_path = "earth_map.png"  # 替换为你的地图图片路径
+    if not os.path.exists(image_path):
+        print(f"图片文件 {image_path} 不存在！")
+        return
 
-        # 取样
-        data = sample_image(image, hex_size, sampling_method)
+    image = Image.open(image_path).convert("RGB")
 
-        # 保存为JSON文件
-        output_path = "map_data.json"
-        with open(output_path, "w") as f:
-            json.dump(data, f, indent=4)
+    # 取样
+    data = sample_image(image, hex_size, sampling_method)
 
-        print(f"取样完成，结果已保存到 {output_path}")
-    except Exception as e:
-        print(f"程序运行出错: {e}")
-        input("按回车键退出...")  # 等待用户按下回车键
+    # 保存为JSON文件
+    output_path = "map_data.json"
+    with open(output_path, "w") as f:
+        json.dump(data, f, indent=4)
+
+    print(f"取样完成，结果已保存到 {output_path}")
 
 if __name__ == "__main__":
     main()
