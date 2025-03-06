@@ -52,6 +52,7 @@ export class HexCellHoverEffect {
 
         // 放大六边形
         this.mesh.scale.set(1.1, 1.1, 1.1); // 放大 10%
+        // console.warn("显示 hover");
     }
 
     /**
@@ -61,7 +62,7 @@ export class HexCellHoverEffect {
         // 显示选中叠加
         if (!this.selectOverlay) {
             const selectOverlayGeometry = this.mesh.geometry.clone();
-            const selectOverlayMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 }); // 红色半透明
+            const selectOverlayMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
             this.selectOverlay = new THREE.Mesh(selectOverlayGeometry, selectOverlayMaterial);
             //避免干扰
             this.selectOverlay.castShadow = false;
@@ -74,6 +75,7 @@ export class HexCellHoverEffect {
             this.mesh.add(this.selectOverlay);
         }
         this.selectOverlay.visible = true;
+        // console.warn("显示选中");
     }
 
     /**
@@ -95,9 +97,9 @@ export class HexCellHoverEffect {
      */
     public hideSelect(): void {
         if (this.selectOverlay) {
-            this.mesh.remove(this.selectOverlay);
-            this.selectOverlay = undefined;
+            this.selectOverlay.visible = false;
         }
+        // console.warn("显示 不选");
     }
 
     /**

@@ -294,11 +294,11 @@ export class MyCameraControls {
         this.camera.position.add(right.multiplyScalar(this.velocity.x));
         this.camera.position.y += this.velocity.y;
 
-        this.camera.position.clamp(this.cameraPosMin, this.cameraPosMax);
+        this.camera.position.clamp(this.cameraPosMin, this.cameraPosMax);//镜头位置限制
     }
 
     private cameraPosMin: THREE.Vector3 = new THREE.Vector3(-5, 5, 10);
-    private cameraPosMax: THREE.Vector3 = new THREE.Vector3(25, 15, 30);
+    private cameraPosMax: THREE.Vector3 = new THREE.Vector3(10, 15, 30);
     private setLimitCameraPosition(min: THREE.Vector3, max: THREE.Vector3): void {
         this.cameraPosMin.copy(min);
         this.cameraPosMax.copy(max);

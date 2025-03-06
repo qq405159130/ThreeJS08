@@ -30,7 +30,7 @@ export class HexCellHoverEffectManager {
      * @param mesh 六边形网格
      */
     public showHoverEffect(meshs: THREE.Mesh[]): void {
-        this._hideHoverEffect();
+        // this._hideHoverEffect();
         meshs.forEach(mesh => {
             const hoverEffect = this.getHoverEffect(mesh);
             hoverEffect.showHover();
@@ -62,7 +62,7 @@ export class HexCellHoverEffectManager {
      * @param mesh 六边形网格
      */
     public showSelectEffect(meshs: THREE.Mesh[]): void {
-        this._hideSelectEffect();
+        // this._hideSelectEffect();
         meshs.forEach((mesh) => {
             const hoverEffect = this.getHoverEffect(mesh);
             hoverEffect.showSelect();
