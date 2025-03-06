@@ -178,18 +178,14 @@ export class HexGridInteractSystem {
         }
     }
 
-    // 处理框选逻辑
-    private handleBoxSelect(event: MouseEvent): void {
-        const views = Array.from(this.cellViews.values());
-        const newSelectedCells = new Set<HexCellView>();
-        const preSelectedCells = new Set<HexCellView>()
-
-        const minX = Math.min(this.dragStart.x, this.dragEnd.x);
-        const maxX = Math.max(this.dragStart.x, this.dragEnd.x);
-        const minY = Math.min(this.dragStart.y, this.dragEnd.y);
-        const maxY = Math.max(this.dragStart.y, this.dragEnd.y);
-
-        views.forEach(cell => {
+    /** 用屏幕矩形框住的 */
+    private findHexCellByScreenRect(cellViews: HexCellView[], sp: THREE.Vector2, ep: THREE.Vector2): Set<HexCellView> {
+        const findCells = new Set<HexCellView>();
+        const minX = Math.min(sp.x, ep.x);
+        const maxX = Math.max(sp.x, ep.x);
+        const minY = Math.min(sp.y, ep.y);
+        const maxY = Math.max(sp.y, ep.y);
+        cellViews.forEach(cell => {
             const screenPosition = new THREE.Vector3();
             cell.mesh.getWorldPosition(screenPosition);
             screenPosition.project(this.camera);
@@ -198,10 +194,22 @@ export class HexGridInteractSystem {
             const y = (-screenPosition.y + 1) * window.innerHeight / 2;
 
             if (x >= minX && x <= maxX && y >= minY && y <= maxY) {
-                newSelectedCells.add(cell);
+                findCells.add(cell);
             }
         });
+        return findCells;
+    }
 
+    /** 用地面矩形框住的 */
+    private findHexCellByGroundRect(cellViews: HexCellView[], sp: THREE.Vector3, ep: THREE.Vector3): Set<HexCellView> {
+        return new Set();//TODO
+    }
+
+    // 处理框选逻辑
+    private handleBoxSelect(event: MouseEvent): void {
+        const views = Array.from(this.cellViews.values());
+        const preSelectedCells = new Set<HexCellView>()
+        const newSelectedCells = this.findHexCellByScreenRect(views, this.dragStart, this.dragEnd);
 
         if (event.shiftKey) {
             // 加选逻辑
