@@ -16,8 +16,6 @@ export class MapGenerator {
     private mapInfo: MapInfo;
     private heightThresholds: { height1: number; height2: number; height3: number; height4: number };
 
-    private preTimestamp: number = 0;
-
     constructor(mapInfo: MapInfo) {
         this.mapInfo = mapInfo;
         this.heightThresholds = { height1: 0, height2: 0, height3: 0, height4: 0 };
@@ -41,7 +39,7 @@ export class MapGenerator {
 
         this.initializeGrid();
 
-        await this.generateHeightMap();
+        await this.generateHeightMap('json');
         await this.classifyTerrain();
         await this.generateRivers();
         await this.generateClimate();
@@ -51,11 +49,21 @@ export class MapGenerator {
         return Array.from(this.cellDatas.values()).map(cell => cell.data);
     }
 
-    /** Unable to resolve signature of method decorator when called as an expression.
-  The runtime will invoke the decorator with 3 arguments, but the decorator expects 1.ts(1241)
-Decorator function return type '(target: any, propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor' is not assignable to type 'void | TypedPropertyDescriptor<() => Promise<void>>'.ts(1270) */
+
     @logExecutionTime("生成高度图")
-    private async generateHeightMap(): Promise<void> {
+    public async generateHeightMap(mode: 'noise' | 'json' = 'noise'): Promise<void> {
+        if (mode === 'noise') {
+            const noisePath = process.env.NODE_ENV === 'production' ? '/noise.png' : '../public/noise.png';
+            await this.generateHeightMapFromNoise(noisePath);
+        } else if (mode === 'json') {
+            const jsonPath = process.env.NODE_ENV === 'production' ? '/map_data.json' : '../public/map_data.json'; // JSON 文件路径
+            await this.generateHeightMapFromJSON(jsonPath);
+        } else {
+            throw new Error('Invalid mode. Supported modes are "noise" and "json".');
+        }
+    }
+
+    private async generateHeightMapFromNoise(noisePath: string): Promise<void> {
         const width = this.mapInfo.width;
         const height = this.mapInfo.height;
 
@@ -69,20 +77,10 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
         //     2.0  // lacunarity
         // );
         const noiseGen = new NoiseTextureLoader();
-        //当前时间戳
-        this.preTimestamp = Date.now();
-        const noisePath = process.env.NODE_ENV === 'production' ? '/noise.png' : '../public/noise.png';
         await noiseGen.loadNoiseTexture(noisePath);
         // await noiseGen.loadNoiseTexture('../public/noise.png');//本地能加载成功。
         // await noiseGen.loadNoiseTexture('/noise.png');//本地也加载失败了；
-        //打印用时
-        console.warn("加载噪声图片，用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
-        this.preTimestamp = Date.now();
         const noiseMap = await noiseGen.generateNoiseMap(width, height);
-        console.warn("生成噪声图，用时: " + Math.ceil((Date.now() - this.preTimestamp)) / 1000 + "s");
-        this.preTimestamp = Date.now();
-
-        // console.error("noiseMap : " + noiseMap);
 
         // 计算高度等级阈值
         const sortedHeights = [...noiseMap].sort((a, b) => a - b);
@@ -111,6 +109,35 @@ Decorator function return type '(target: any, propertyKey: string, descriptor: P
 
             cell.setHeight(heightValue, level);
         });
+    }
+
+    private async generateHeightMapFromJSON(jsonPath: string): Promise<void> {
+        const response = await fetch(jsonPath);
+        const data = await response.json();
+
+        // 遍历 JSON 数据，设置单元格高度
+        data.forEach((cellData: { x: number; y: number; height: number }) => {
+            const cell = this.cellDatas.get(`${cellData.x},${cellData.y}`);
+            if (cell) {
+                // 将高度值映射到 0~1 范围（假设 JSON 中的高度是 0~255）
+                const heightValue = cellData.height / 255;
+                cell.setHeight(heightValue, this.getHeightLevel(heightValue));
+            }
+        });
+    }
+
+    private getHeightLevel(heightValue: number): eHeightLevel {
+        if (heightValue < this.heightThresholds.height1) {
+            return eHeightLevel.None;
+        } else if (heightValue < this.heightThresholds.height2) {
+            return eHeightLevel.Level1;
+        } else if (heightValue < this.heightThresholds.height3) {
+            return eHeightLevel.Level2;
+        } else if (heightValue < this.heightThresholds.height4) {
+            return eHeightLevel.Level3;
+        } else {
+            return eHeightLevel.Level4;
+        }
     }
 
     @logExecutionTime("生成地形")
