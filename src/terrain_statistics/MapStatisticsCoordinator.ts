@@ -65,42 +65,106 @@ export class MapStatisticsCoordinator {
     }
 }
 
+
 function mergeStats(stats: MapStatistics, collectedStats: any): void {
+    console.log('开始合并 collectedStats 到 stats');
+    console.log('collectedStats:', collectedStats);
+    console.log('stats（合并前）:', stats);
+
     for (const key in collectedStats) {
         if (key in stats) {
             const collectedValue = collectedStats[key];
             const statsValue = stats[key as keyof MapStatistics];
 
+            console.log(`处理字段: ${key}`);
+            console.log('collectedValue:', collectedValue);
+            console.log('statsValue（合并前）:', statsValue);
+
             if (typeof collectedValue === 'object' && collectedValue !== null) {
                 if (collectedValue instanceof Map) {
                     // 如果 collectedValue 是 Map，手动合并
                     if (statsValue instanceof Map) {
+                        console.log('合并 Map 数据');
                         collectedValue.forEach((value: any, subKey: any) => {
-                            (statsValue as Map<any, any>).set(subKey, value);
+                            if (value instanceof Map) {
+                                // 如果 value 也是 Map，递归合并
+                                if (!statsValue.has(subKey)) {
+                                    statsValue.set(subKey, new Map());
+                                }
+                                const subStatsValue = statsValue.get(subKey);
+                                mergeStats(subStatsValue, value);
+                            } else {
+                                // 否则直接设置值
+                                statsValue.set(subKey, value);
+                            }
                         });
+                    } else {
+                        console.error('statsValue 不是 Map，无法合并');
                     }
+                } else if (Array.isArray(collectedValue)) {
+                    // 如果 collectedValue 是数组，直接赋值
+                    console.log('合并数组数据');
+                    Object.assign(statsValue, collectedValue);
                 } else {
                     // 如果 collectedValue 是普通对象，递归合并
+                    console.log('合并普通对象数据');
                     for (const subKey in collectedValue) {
                         if (subKey in statsValue) {
                             const subCollectedValue = collectedValue[subKey];
                             const subStatsValue = statsValue[subKey as keyof typeof statsValue];
 
+                            console.log(`处理嵌套字段: ${subKey}`);
+                            console.log('subCollectedValue:', subCollectedValue);
+                            console.log('subStatsValue（合并前）:', subStatsValue);
+
                             if (subCollectedValue instanceof Map) {
                                 // 如果 subCollectedValue 是 Map，手动合并
                                 if ((subStatsValue as Map<any, any>) instanceof Map) {
+                                    console.log('合并嵌套 Map 数据');
                                     subCollectedValue.forEach((value: any, mapKey: any) => {
-                                        (subStatsValue as Map<any, any>).set(mapKey, value);
+                                        if (value  instanceof Map) {
+                                            // 如果 value 也是 Map，递归合并
+                                            //Property 'has' does not exist on type 'never'.ts(2339)
+                                            if (!subStatsValue.has(mapKey)) {
+                                                /** Property 'set' does not exist on type 'never'.ts(2339)
+                                                 * any */
+                                                subStatsValue.set(mapKey, new Map());
+                                            }
+                                            /** Property 'get' does not exist on type 'never'.ts(2339)
+                                                    any */
+                                            const subSubStatsValue = subStatsValue.get(mapKey);
+                                            mergeStats(subSubStatsValue, value);
+                                        } else {
+                                            // 否则直接设置值
+                                            /** Property 'set' does not exist on type 'never'.ts(2339)
+                                            any */
+                                            subStatsValue.set(mapKey, value);
+                                        }
                                     });
+                                } else {
+                                    console.error('subStatsValue 不是 Map，无法合并');
                                 }
                             } else if (typeof subCollectedValue === 'object' && subCollectedValue !== null) {
-                                // 如果 subCollectedValue 是普通对象，直接赋值
-                                Object.assign(subStatsValue, subCollectedValue);
+                                // 如果 subCollectedValue 是普通对象，递归合并
+                                console.log('合并普通对象数据');
+                                mergeStats(subStatsValue, subCollectedValue);
+                            } else {
+                                // 否则直接赋值
+                                console.log('直接赋值');
+                                /** Cannot assign to 'subStatsValue' because it is a constant.ts(2588)
+                                const subStatsValue: any */
+                                subStatsValue = subCollectedValue;
                             }
+
+                            console.log('subStatsValue（合并后）:', subStatsValue);
                         }
                     }
                 }
             }
+
+            console.log('statsValue（合并后）:', statsValue);
         }
     }
+
+    console.log('stats（合并后）:', stats);
 }
