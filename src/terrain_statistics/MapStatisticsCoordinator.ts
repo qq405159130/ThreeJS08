@@ -65,23 +65,41 @@ export class MapStatisticsCoordinator {
     }
 }
 
-// 合并 stats 的辅助函数
 function mergeStats(stats: MapStatistics, collectedStats: any): void {
     for (const key in collectedStats) {
         if (key in stats) {
             const collectedValue = collectedStats[key];
             const statsValue = stats[key as keyof MapStatistics];
 
-            if (collectedValue instanceof Map) {
-                // 如果是 Map，手动合并
-                collectedValue.forEach((value: any, subKey: any) => {
-                    /** Conversion of type 'TerrainStats | HeightStats | HumidityStats | ResourceStats | CityStats | InfrastructureStats | ... 4 more ... | NumericalRangeStats' to type 'Map<any, any>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Type 'NumericalRangeStats' is missing the following properties from type 'Map<any, any>': clear, delete, forEach, get, and 8 more.ts(2352) */
-                    (statsValue as Map<any, any>).set(subKey, value);
-                });
-            } else if (typeof collectedValue === 'object' && collectedValue !== null) {
-                // 如果是普通对象，直接赋值
-                Object.assign(statsValue, collectedValue);
+            if (typeof collectedValue === 'object' && collectedValue !== null) {
+                if (collectedValue instanceof Map) {
+                    // 如果 collectedValue 是 Map，手动合并
+                    if (statsValue instanceof Map) {
+                        collectedValue.forEach((value: any, subKey: any) => {
+                            (statsValue as Map<any, any>).set(subKey, value);
+                        });
+                    }
+                } else {
+                    // 如果 collectedValue 是普通对象，递归合并
+                    for (const subKey in collectedValue) {
+                        if (subKey in statsValue) {
+                            const subCollectedValue = collectedValue[subKey];
+                            const subStatsValue = statsValue[subKey as keyof typeof statsValue];
+
+                            if (subCollectedValue instanceof Map) {
+                                // 如果 subCollectedValue 是 Map，手动合并
+                                if ((subStatsValue as Map<any, any>) instanceof Map) {
+                                    subCollectedValue.forEach((value: any, mapKey: any) => {
+                                        (subStatsValue as Map<any, any>).set(mapKey, value);
+                                    });
+                                }
+                            } else if (typeof subCollectedValue === 'object' && subCollectedValue !== null) {
+                                // 如果 subCollectedValue 是普通对象，直接赋值
+                                Object.assign(subStatsValue, subCollectedValue);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
