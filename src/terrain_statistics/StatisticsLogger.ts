@@ -1,7 +1,6 @@
 import { eResource, eTerrain } from "@/terrain/enums";
 import { MapStatistics } from "./TerrainStatsTypes";
 
-
 // ANSI 颜色代码
 const Colors = {
     Reset: "\x1b[0m",
@@ -58,7 +57,7 @@ export class StatisticsLogger {
         const data = Array.from(counts.entries()).map(([key, count]) => {
             const proportion = proportions?.get(key) || 0;
             return {
-                "类型": key,
+                "类型": this.getTypeName(key), // 将枚举值转换为可读的名称
                 "数量": count,
                 "比例": `${(proportion * 100).toFixed(2)}%`
             };
@@ -68,9 +67,21 @@ export class StatisticsLogger {
         console.table(data);
     }
 
+    private static getTypeName(type: any): string {
+        if (typeof type === 'number') {
+            // 如果是数值类型，尝试从枚举中获取对应的名称
+            if (type in eTerrain) {
+                return eTerrain[type];
+            } else if (type in eResource) {
+                return eResource[type];
+            }
+        }
+        return type.toString(); // 默认返回字符串形式
+    }
+
     private static mapToObject(map: Map<any, number>): { [key: string]: number } {
         return Array.from(map.entries()).reduce((obj, [key, value]) => {
-            obj[key] = value;
+            obj[this.getTypeName(key)] = value; // 将键转换为可读的名称
             return obj;
         }, {} as { [key: string]: number });
     }
