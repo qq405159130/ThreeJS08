@@ -12,6 +12,7 @@ from tqdm import tqdm
 # ----------------------------------------
 import cv2  # 用于图像处理（颜色空间转换等）
 from skimage.feature import graycomatrix, graycoprops  # 用于纹理特征提取
+from skimage.color import rgb2hsv  # 新增：用于RGB到HSV颜色空间转换
 # ----------------------------------------
 
 # 定义地形类型
@@ -34,53 +35,84 @@ TERRAIN_NAMES = {
     5: "湖泊"
 }
 
-# 新增方法：基于纹理的分类
+# 新增方法：基于纹理的分类（增强版）
 # ----------------------------------------
 def get_terrain_type_by_texture(patch):
     """
-    根据纹理特征判断地形类型
+    根据纹理特征判断地形类型（增强版）
     :param patch: 图像块（灰度图像）
     :return: 地形类型
     """
-    # 计算灰度共生矩阵（GLCM）
-    glcm = graycomatrix(patch, distances=[1], angles=[0], levels=256, symmetric=True, normed=True)
+    # 计算灰度共生矩阵（GLCM），多角度提取纹理特征
+    glcm = graycomatrix(patch, distances=[1], angles=[0, 45, 90, 135], levels=256, symmetric=True, normed=True)
     
-    # 提取纹理特征
-    contrast = graycoprops(glcm, 'contrast')[0, 0]
-    energy = graycoprops(glcm, 'energy')[0, 0]
+    # 提取更多纹理特征
+    contrast = graycoprops(glcm, 'contrast').mean()
+    energy = graycoprops(glcm, 'energy').mean()
+    correlation = graycoprops(glcm, 'correlation').mean() #相关性
+    homogeneity = graycoprops(glcm, 'homogeneity').mean() #同质性
     
-    # 根据纹理特征分类
+    # 根据纹理特征分类（规则优化）
     if contrast > 0.5 and energy < 0.2:
         return TERRAIN_TYPES["MOUNTAIN"]  # 山地
     elif contrast < 0.2 and energy > 0.5:
         return TERRAIN_TYPES["PLAIN"]  # 平原
-    else:
+    elif correlation > 0.7 and homogeneity > 0.6:
+        return TERRAIN_TYPES["LAKE"]  # 湖泊
+    elif 0.3 < contrast < 0.5 and 0.3 < energy < 0.5:
         return TERRAIN_TYPES["HILL"]  # 丘陵
+    else:
+        return TERRAIN_TYPES["PLAIN"]  # 默认平原
 # ----------------------------------------
 
-# 新增方法：结合颜色信息
+# 新增方法：基于颜色的分类（优化版，使用HSV颜色空间）
 # ----------------------------------------
 def get_terrain_type_by_color(color):
     """
-    根据颜色信息判断地形类型
+    根据颜色信息判断地形类型（优化版，使用HSV颜色空间）
     :param color: RGB颜色值
     :return: 地形类型
     """
-    r, g, b = color
-    if b > 200 and r < 100 and g < 100:  # 海洋
-        return TERRAIN_TYPES["OCEAN"]
-    elif g > 200 and r < 100 and b < 100:  # 平原
-        return TERRAIN_TYPES["PLAIN"]
-    elif r > 200 and g > 100 and b < 100:  # 丘陵
-        return TERRAIN_TYPES["HILL"]
-    elif r > 200 and g < 100 and b < 100:  # 山地
-        return TERRAIN_TYPES["MOUNTAIN"]
-    elif r > 200 and g > 200 and b > 200:  # 高山
-        return TERRAIN_TYPES["HIGH_MOUNTAIN"]
-    elif b > 100 and g > 100 and r < 100:  # 湖泊
-        return TERRAIN_TYPES["LAKE"]
+    # 将RGB颜色转换为HSV颜色空间
+    h, s, v = rgb2hsv(np.array(color).reshape(1, 1, 3)).reshape(3)
+    
+    # 根据HSV值分类
+    if v < 0.3:  # 低亮度区域
+        return TERRAIN_TYPES["OCEAN"]  # 海洋
+    elif s < 0.2:  # 低饱和度区域
+        return TERRAIN_TYPES["PLAIN"]  # 平原
+    elif 0.05 < h < 0.15:  # 黄色区域
+        return TERRAIN_TYPES["HILL"]  # 丘陵
+    elif 0.6 < h < 0.7:  # 蓝色区域
+        return TERRAIN_TYPES["LAKE"]  # 湖泊
+    elif 0.9 < h < 1.0 or 0.0 < h < 0.05:  # 红色区域
+        return TERRAIN_TYPES["MOUNTAIN"]  # 山地
+    elif s > 0.5 and v > 0.8:  # 高饱和度、高亮度区域
+        return TERRAIN_TYPES["HIGH_MOUNTAIN"]  # 高山
     else:
         return TERRAIN_TYPES["PLAIN"]  # 默认平原
+# ----------------------------------------
+
+# 新增方法：纹理与颜色协调分类
+# ----------------------------------------
+def get_terrain_type_by_texture_and_color(patch, color):
+    """
+    结合纹理和颜色信息判断地形类型
+    :param patch: 图像块（灰度图像）
+    :param color: RGB颜色值
+    :return: 地形类型
+    """
+    # 基于纹理分类
+    terrain_type_texture = get_terrain_type_by_texture(patch)
+    
+    # 基于颜色分类
+    terrain_type_color = get_terrain_type_by_color(color)
+    
+    # 协调规则：优先使用纹理分类，但当颜色分类为湖泊或海洋时，优先使用颜色分类
+    if terrain_type_color in [TERRAIN_TYPES["OCEAN"], TERRAIN_TYPES["LAKE"]]:
+        return terrain_type_color
+    else:
+        return terrain_type_texture
 # ----------------------------------------
 
 def get_humidity_level(color):
@@ -157,24 +189,12 @@ def sample_image(image, hex_width, hex_height, sampling_method):
                         avg_color = np.mean(pixels, axis=0)
 
                 if pixels:
-                    # 新增策略：结合纹理和颜色信息
-                    # ----------------------------------------
                     # 提取当前网格的灰度图像块
                     patch_gray = image_gray[y:y + hex_height, x:x + hex_width]
                     
-                    # 基于纹理分类
-                    terrain_type_texture = get_terrain_type_by_texture(patch_gray)
+                    # 使用纹理和颜色协调分类
+                    terrain_type = get_terrain_type_by_texture_and_color(patch_gray, avg_color)
                     
-                    # 基于颜色分类
-                    terrain_type_color = get_terrain_type_by_color(avg_color)
-                    
-                    # 综合判断（优先使用纹理分类，颜色分类作为辅助）
-                    if terrain_type_texture == TERRAIN_TYPES["PLAIN"] and terrain_type_color == TERRAIN_TYPES["MOUNTAIN"]:
-                        terrain_type = TERRAIN_TYPES["HILL"]  # 修正为丘陵
-                    else:
-                        terrain_type = terrain_type_texture
-                    # ----------------------------------------
-
                     # 保存结果
                     data.append({
                         "x": index_x,
