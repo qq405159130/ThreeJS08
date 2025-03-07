@@ -1,76 +1,80 @@
 import { HexCell } from "@/terrain/HexCell";
 import { eResource, eTerrain } from "@/terrain/enums";
-import { ClimateZoneStats, ResourceStats, RiverStats, TerrainStats } from "./TerrainStatsTypes";
+import { MapStatistics, StatValue } from "./TerrainStatsTypes";
 
-/** 地形统计器 */
+
 export class TerrainStatsCollector {
-    collect(cells: HexCell[]): TerrainStats {
+    collect(cells: HexCell[]): MapStatistics {
+        const stats = new Map<string, StatValue>();
+
+        // 计算地形数量
         const counts = new Map<eTerrain, number>();
         cells.forEach(cell => {
             const terrain = cell.data.terrainType;
             counts.set(terrain, (counts.get(terrain) || 0) + 1);
         });
-        console.warn("（调试）地形统计器 counts   \n" + Array.from(counts.entries()));
-        const proportions = this.calculateProportions(counts, cells.length);
-        console.warn("（调试）地形统计器 proportions   \n" + Array.from(proportions.entries()));
-        return { counts, proportions };
-    }
+        stats.set("terrain/counts", counts);
 
-    private calculateProportions(counts: Map<eTerrain, number>, total: number) {
+        // 计算地形比例
         const proportions = new Map<eTerrain, number>();
-        counts.forEach((value, key) => proportions.set(key, value / total));
-        return proportions;
+        const totalCells = cells.length;
+        counts.forEach((count, terrain) => {
+            proportions.set(terrain, count / totalCells);
+        });
+        stats.set("terrain/proportions", proportions);
+
+        return stats;
     }
 }
 
 /** 资源统计器 */
 export class ResourceStatsCollector {
-    collect(cells: HexCell[]): ResourceStats {
-        const counts = new Map<eResource, number>();
-        const terrainDistribution = new Map<eTerrain, Map<eResource, number>>();
+    collect(cells: HexCell[]): MapStatistics {
+        const stats = new Map<string, StatValue>();
 
+        // 计算资源数量
+        const counts = new Map<eResource, number>();
         cells.forEach(cell => {
             const resource = cell.data.resourceType;
             if (resource !== null) {
                 counts.set(resource, (counts.get(resource) || 0) + 1);
-
-                const terrain = cell.data.terrainType;
-                if (!terrainDistribution.has(terrain)) {
-                    terrainDistribution.set(terrain, new Map());
-                }
-                const resourceMap = terrainDistribution.get(terrain)!;
-                resourceMap.set(resource, (resourceMap.get(resource) || 0) + 1);
             }
         });
-        console.warn("（调试）资源统计器 counts   \n" + Array.from(counts.values()));
-        return { counts, terrainDistribution };
+        stats.set("resources/counts", counts);
+
+        return stats;
     }
 }
 
 /** 河流统计器 */
 export class RiverStatsCollector {
-    collect(cells: HexCell[]): RiverStats {
+    collect(cells: HexCell[]): MapStatistics {
+        const stats = new Map<string, StatValue>();
+
+        // 计算河流数量
         let riverCount = 0;
         cells.forEach(cell => {
             if (cell.data.riverLevel > 0) riverCount++;
         });
-        console.warn("（调试）河流统计器 riverCount   \n" + riverCount);
-        return {
-            riverCount,
-            riverProportion: riverCount / cells.length,
-        };
+        stats.set("rivers/count", riverCount);
+
+        return stats;
     }
 }
 
 /** 气候带统计器 */
 export class ClimateZoneStatsCollector {
-    collect(cells: HexCell[]): ClimateZoneStats {
+    collect(cells: HexCell[]): MapStatistics {
+        const stats = new Map<string, StatValue>();
+
+        // 计算气候带分布
         const zones = new Map<string, number>();
         cells.forEach(cell => {
             const key = `${cell.data.heightLevel}-${cell.data.humidityLevel}`;
             zones.set(key, (zones.get(key) || 0) + 1);
         });
-        console.warn("（调试）气候带统计器 zones   \n" + Array.from(zones.values()));
-        return { zones };
+        stats.set("climate/zones", zones);
+
+        return stats;
     }
 }

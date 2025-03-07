@@ -1,50 +1,35 @@
 import { eResource, eTerrain } from "@/terrain/enums";
-import { ClimateZoneStats, MapStatistics, ResourceStats, RiverStats, TerrainStats } from "./TerrainStatsTypes";
+import { MapStatistics } from "./TerrainStatsTypes";
+
 
 export class StatisticsLogger {
     static log(stats: MapStatistics) {
         console.groupCollapsed('=== 地图统计详情 ===');
-        console.log('（调试）完整统计数据:', stats); // 打印完整的统计数据
-        if (stats.terrain) this.logTerrain(stats.terrain);
-        if (stats.resources) this.logResources(stats.resources);
-        if (stats.rivers) this.logRivers(stats.rivers);
-        if (stats.climateZones) this.logClimateZones(stats.climateZones);
+
+        // 地形统计
+        const terrainCounts = stats.get("terrain/counts") as Map<eTerrain, number>;
+        const terrainProportions = stats.get("terrain/proportions") as Map<eTerrain, number>;
+        console.log("地形数量:", this.formatMap(terrainCounts));
+        console.log("地形比例:", this.formatMap(terrainProportions));
+
+        // 资源统计
+        const resourceCounts = stats.get("resources/counts") as Map<eResource, number>;
+        console.log("资源分布:", this.formatMap(resourceCounts));
+
+        // 河流统计
+        const riverCount = stats.get("rivers/count") as number;
+        console.log("河流数量:", riverCount);
+
+        // 气候带统计
+        const climateZones = stats.get("climate/zones") as Map<string, number>;
+        console.log("气候带分布:", this.formatMap(climateZones));
+
         console.groupEnd();
     }
 
-    private static logTerrain(stats: TerrainStats) {
-        console.group('地形统计');
-        console.log('Terrain counts:', stats.counts);
-        console.log('Terrain proportions:', stats.proportions);
-    
-        stats.counts.forEach((count, terrain) => {
-            const proportion = stats.proportions.get(terrain) || 0;
-            console.log(`${eTerrain[terrain]}: ${count} (${proportion * 100}%)`);
-        });
-    
-        console.groupEnd();
-    }
-
-    private static logResources(stats: ResourceStats) {
-        console.group('资源统计');
-        stats.counts.forEach((count, resource) => {
-            console.log(`${eResource[resource]}: ${count}`);
-        });
-        console.groupEnd();
-    }
-
-    private static logRivers(stats: RiverStats) {
-        console.group('河流统计');
-        console.log(`河流格子数量: ${stats.riverCount}`);
-        console.log(`河流占比: ${(stats.riverProportion * 100).toFixed(2)}%`);
-        console.groupEnd();
-    }
-
-    private static logClimateZones(stats: ClimateZoneStats) {
-        console.group('气候带统计');
-        stats.zones.forEach((count, zone) => {
-            console.log(`${zone}: ${count}`);
-        });
-        console.groupEnd();
+    private static formatMap(map: Map<any, number>): string {
+        return Array.from(map.entries())
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(", ");
     }
 }
