@@ -163,34 +163,36 @@ def show_statistics(data):
         print(f"{terrain}: {count} 个，占比 {percentage:.2f}%")
 
     # b. 各高度占比
-    height_bins = [0, 50, 100, 150, 200, 255]
-    height_counts = {f"{height_bins[i]}-{height_bins[i+1]}": 0 for i in range(len(height_bins) - 1)}
-    for d in data:
-        height = d["height"]
-        for i in range(len(height_bins) - 1):
-            if height_bins[i] <= height < height_bins[i + 1]:
-                height_counts[f"{height_bins[i]}-{height_bins[i+1]}"] += 1
-                break
+    if "height" in data[0]: #（仅在数据中包含 height 字段时显示）
+        height_bins = [0, 50, 100, 150, 200, 255]
+        height_counts = {f"{height_bins[i]}-{height_bins[i+1]}": 0 for i in range(len(height_bins) - 1)}
+        for d in data:
+            height = d["height"]
+            for i in range(len(height_bins) - 1):
+                if height_bins[i] <= height < height_bins[i + 1]:
+                    height_counts[f"{height_bins[i]}-{height_bins[i+1]}"] += 1
+                    break
 
-    print("\n=== 各高度占比 ===")
-    for range_, count in height_counts.items():
-        percentage = (count / total_cells) * 100
-        print(f"高度 {range_}: {count} 个，占比 {percentage:.2f}%")
+        print("\n=== 各高度占比 ===")
+        for range_, count in height_counts.items():
+            percentage = (count / total_cells) * 100
+            print(f"高度 {range_}: {count} 个，占比 {percentage:.2f}%")
 
     # c. 各湿度占比
-    humidity_bins = [0, 3, 6, 10]
-    humidity_counts = {f"{humidity_bins[i]}-{humidity_bins[i+1]}": 0 for i in range(len(humidity_bins) - 1)}
-    for d in data:
-        humidity = d["humidity"]
-        for i in range(len(humidity_bins) - 1):
-            if humidity_bins[i] <= humidity < humidity_bins[i + 1]:
-                humidity_counts[f"{humidity_bins[i]}-{humidity_bins[i+1]}"] += 1
-                break
+    if "humidity" in data[0]: #（仅在数据中包含 humidity 字段时显示）
+        humidity_bins = [0, 3, 6, 10]
+        humidity_counts = {f"{humidity_bins[i]}-{humidity_bins[i+1]}": 0 for i in range(len(humidity_bins) - 1)}
+        for d in data:
+            humidity = d["humidity"]
+            for i in range(len(humidity_bins) - 1):
+                if humidity_bins[i] <= humidity < humidity_bins[i + 1]:
+                    humidity_counts[f"{humidity_bins[i]}-{humidity_bins[i+1]}"] += 1
+                    break
 
-    print("\n=== 各湿度占比 ===")
-    for range_, count in humidity_counts.items():
-        percentage = (count / total_cells) * 100
-        print(f"湿度 {range_}: {count} 个，占比 {percentage:.2f}%")
+        print("\n=== 各湿度占比 ===")
+        for range_, count in humidity_counts.items():
+            percentage = (count / total_cells) * 100
+            print(f"湿度 {range_}: {count} 个，占比 {percentage:.2f}%")
 
 def parse_size_input(size_input):
     """解析尺寸输入"""
