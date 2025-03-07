@@ -1,9 +1,11 @@
-# pip install pillow numpy #本程序所需插件
+# pip install pillow numpy tqdm #本程序所需插件
 import numpy as np
 from PIL import Image
 import json
 import os
 import re
+import time
+from tqdm import tqdm
 
 # 定义地形类型
 TERRAIN_TYPES = {
@@ -81,45 +83,66 @@ def sample_image(image, hex_width, hex_height, sampling_method):
     index_x = 0
     index_y = 0
 
-    for y in range(0, height, hex_height):
-        for x in range(0, width, hex_width):
-            if sampling_method == 1:
-                # 取样方式1：网格内所有像素平均
-                pixels = []
-                for i in range(x, x + hex_width):
-                    for j in range(y, y + hex_height):
-                        if i < width and j < height:
-                            pixels.append(image.getpixel((i, j)))
-                if pixels:
-                    avg_color = np.mean(pixels, axis=0)
-            else:
-                # 取样方式2：网格中心点的一定范围的所有像素平均
-                center_x = x + hex_width // 2
-                center_y = y + hex_height // 2
-                pixels = []
-                for i in range(center_x - 5, center_x + 5):
-                    for j in range(center_y - 5, center_y + 5):
-                        if i < width and j < height:
-                            pixels.append(image.getpixel((i, j)))
-                if pixels:
-                    avg_color = np.mean(pixels, axis=0)
+    # 计算总网格数
+    total_cells = (height // hex_height) * (width // hex_width)
 
-            if pixels:
-                terrain_type = get_terrain_type(avg_color)
-                humidity_level = get_humidity_level(avg_color)
-                height_level = get_height_level(avg_color)
-                latitude_level = get_latitude_level(y, height)
-                data.append({
-                    "x": index_x,  # 使用索引值
-                    "y": index_y,  # 使用索引值
-                    "terrain": terrain_type,
-                    "humidity": humidity_level,
-                    "height": height_level,
-                    "latitude": latitude_level
-                })
-            index_x += 1
-        index_x = 0
-        index_y += 1
+    # 初始化进度条
+    with tqdm(total=total_cells, desc="取样进度", unit="cell") as pbar:
+        start_time = time.time()  # 记录开始时间
+
+        for y in range(0, height, hex_height):
+            for x in range(0, width, hex_width):
+                if sampling_method == 1:
+                    # 取样方式1：网格内所有像素平均
+                    pixels = []
+                    for i in range(x, x + hex_width):
+                        for j in range(y, y + hex_height):
+                            if i < width and j < height:
+                                pixels.append(image.getpixel((i, j)))
+                    if pixels:
+                        avg_color = np.mean(pixels, axis=0)
+                else:
+                    # 取样方式2：网格中心点的一定范围的所有像素平均
+                    center_x = x + hex_width // 2
+                    center_y = y + hex_height // 2
+                    pixels = []
+                    for i in range(center_x - 5, center_x + 5):
+                        for j in range(center_y - 5, center_y + 5):
+                            if i < width and j < height:
+                                pixels.append(image.getpixel((i, j)))
+                    if pixels:
+                        avg_color = np.mean(pixels, axis=0)
+
+                if pixels:
+                    terrain_type = get_terrain_type(avg_color)
+                    humidity_level = get_humidity_level(avg_color)
+                    height_level = get_height_level(avg_color)
+                    latitude_level = get_latitude_level(y, height)
+                    data.append({
+                        "x": index_x,  # 使用索引值
+                        "y": index_y,  # 使用索引值
+                        "terrain": terrain_type,
+                        "humidity": humidity_level,
+                        "height": height_level,
+                        "latitude": latitude_level
+                    })
+                index_x += 1
+                pbar.update(1)  # 更新进度条
+
+                # 计算已用时间和预测剩余时间
+                elapsed_time = time.time() - start_time
+                cells_processed = pbar.n
+                if cells_processed > 0:
+                    estimated_total_time = (elapsed_time / cells_processed) * total_cells
+                    remaining_time = estimated_total_time - elapsed_time
+                    pbar.set_postfix({
+                        "已用时间": f"{elapsed_time:.2f}s",
+                        "预测总时间": f"{estimated_total_time:.2f}s",
+                        "预测剩余时间": f"{remaining_time:.2f}s"
+                    })
+
+            index_x = 0
+            index_y += 1
 
     return data
 
@@ -252,9 +275,12 @@ def main():
     # 根据取样种类过滤数据
     if sampling_type == 1:
         data = [{"x": d["x"], "y": d["y"], "terrain": d["terrain"]} for d in data]
+    else:
+        # 如果用户选择取样种类为 2（所有数据），则保留所有字段
+        pass
 
-    # 填满高度
-    if normalize_height:
+    # 填满高度（仅在数据中包含 height 字段时执行）
+    if normalize_height and sampling_type == 2:
         data = normalize_heights(data)
 
     # 显示统计信息
