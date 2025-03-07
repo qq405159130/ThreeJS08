@@ -27,11 +27,31 @@ export class MapStatisticsCoordinator {
             climateZones: { zones: new Map() },
             numericalRanges: { minHeight: Infinity, maxHeight: -Infinity, avgHumidity: 0 },
         };
-
+        console.log('（调试）this.collectors.length: ' + this.collectors.length);
         this.collectors.forEach(collector => {
-            Object.assign(stats, collector.collect(cells));
+            const collectedStats = collector.collect(cells);
+            console.log('Collected stats:', collectedStats); // 打印每个统计器的结果
+            // Object.assign(stats, collectedStats);//禁用，只是浅拷贝，会丢失非顶层数据；
+
+            // 手动合并 collectedStats 到 stats
+            for (const key in collectedStats) {
+                if (key in stats) {
+                    /** Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'ResourceStats | ClimateZoneStats | RiverStats | TerrainStats'.
+  No index signature with a parameter of type 'string' was found on type 'ResourceStats | ClimateZoneStats | RiverStats | TerrainStats'.ts(7053) */
+                    if (collectedStats[key] instanceof Map) {
+                        // 如果是 Map，手动合并
+                        collectedStats[key].forEach((value, subKey) => {
+                            stats[key].set(subKey, value);
+                        });
+                    } else {
+                        // 如果是普通对象，直接赋值
+                        Object.assign(stats[key], collectedStats[key]);
+                    }
+                }
+            }
         });
 
+        console.log('（调试）Generated stats:', stats); // 打印完整的统计数据
         return stats;
     }
 }

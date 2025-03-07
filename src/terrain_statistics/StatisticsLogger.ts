@@ -4,6 +4,7 @@ import { ClimateZoneStats, MapStatistics, ResourceStats, RiverStats, TerrainStat
 export class StatisticsLogger {
     static log(stats: MapStatistics) {
         console.groupCollapsed('=== 地图统计详情 ===');
+        console.log('（调试）完整统计数据:', stats); // 打印完整的统计数据
         if (stats.terrain) this.logTerrain(stats.terrain);
         if (stats.resources) this.logResources(stats.resources);
         if (stats.rivers) this.logRivers(stats.rivers);

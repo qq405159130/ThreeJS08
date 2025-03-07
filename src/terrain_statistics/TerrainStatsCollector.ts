@@ -10,6 +10,7 @@ export class TerrainStatsCollector {
             const terrain = cell.data.terrainType;
             counts.set(terrain, (counts.get(terrain) || 0) + 1);
         });
+        console.warn("（调试）地形统计器 counts   \n" + Array.from(counts.values()));
         return {
             counts,
             proportions: this.calculateProportions(counts, cells.length),
@@ -42,7 +43,7 @@ export class ResourceStatsCollector {
                 resourceMap.set(resource, (resourceMap.get(resource) || 0) + 1);
             }
         });
-
+        console.warn("（调试）资源统计器 counts   \n" + Array.from(counts.values()));
         return { counts, terrainDistribution };
     }
 }
@@ -54,6 +55,7 @@ export class RiverStatsCollector {
         cells.forEach(cell => {
             if (cell.data.riverLevel > 0) riverCount++;
         });
+        console.warn("（调试）河流统计器 riverCount   \n" + riverCount);
         return {
             riverCount,
             riverProportion: riverCount / cells.length,
@@ -69,6 +71,7 @@ export class ClimateZoneStatsCollector {
             const key = `${cell.data.heightLevel}-${cell.data.humidityLevel}`;
             zones.set(key, (zones.get(key) || 0) + 1);
         });
+        console.warn("（调试）气候带统计器 zones   \n" + Array.from(zones.values()));
         return { zones };
     }
 }
