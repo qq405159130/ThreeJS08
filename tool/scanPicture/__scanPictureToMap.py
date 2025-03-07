@@ -1,3 +1,4 @@
+# pip install pillow numpy #本程序所需插件
 import numpy as np
 from PIL import Image
 import json

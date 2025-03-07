@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { HexCellInteractEffect } from './HexCellInteractEffect';
-// import { Pool } from 'object-pool';
+// import { Pool } from 'object-pool'; //需要在项目中安装插件//yarn add object-pool //yarn add @types/object-pool --dev
 
 export class HexCellInteractEffectHandler {
     private hoverEffects: Map<THREE.Mesh, HexCellInteractEffect> = new Map(); // 六边形网格与 hover 效果的映射
