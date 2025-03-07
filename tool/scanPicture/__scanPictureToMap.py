@@ -1,4 +1,5 @@
-# pip install pillow numpy tqdm #本程序所需插件
+# pip install pillow numpy tqdm #本程序所需插件：基本图像处理；
+# pip install opencv-python scikit-image #本程序所需插件：进一步图形处理；
 import numpy as np
 from PIL import Image
 import json
@@ -6,6 +7,12 @@ import os
 import re
 import time
 from tqdm import tqdm
+
+# 新增库：用于纹理分析和颜色信息处理
+# ----------------------------------------
+import cv2  # 用于图像处理（颜色空间转换等）
+from skimage.feature import graycomatrix, graycoprops  # 用于纹理特征提取
+# ----------------------------------------
 
 # 定义地形类型
 TERRAIN_TYPES = {
@@ -27,8 +34,38 @@ TERRAIN_NAMES = {
     5: "湖泊"
 }
 
-def get_terrain_type(color):
-    """根据颜色判断地形类型"""
+# 新增方法：基于纹理的分类
+# ----------------------------------------
+def get_terrain_type_by_texture(patch):
+    """
+    根据纹理特征判断地形类型
+    :param patch: 图像块（灰度图像）
+    :return: 地形类型
+    """
+    # 计算灰度共生矩阵（GLCM）
+    glcm = graycomatrix(patch, distances=[1], angles=[0], levels=256, symmetric=True, normed=True)
+    
+    # 提取纹理特征
+    contrast = graycoprops(glcm, 'contrast')[0, 0]
+    energy = graycoprops(glcm, 'energy')[0, 0]
+    
+    # 根据纹理特征分类
+    if contrast > 0.5 and energy < 0.2:
+        return TERRAIN_TYPES["MOUNTAIN"]  # 山地
+    elif contrast < 0.2 and energy > 0.5:
+        return TERRAIN_TYPES["PLAIN"]  # 平原
+    else:
+        return TERRAIN_TYPES["HILL"]  # 丘陵
+# ----------------------------------------
+
+# 新增方法：结合颜色信息
+# ----------------------------------------
+def get_terrain_type_by_color(color):
+    """
+    根据颜色信息判断地形类型
+    :param color: RGB颜色值
+    :return: 地形类型
+    """
     r, g, b = color
     if b > 200 and r < 100 and g < 100:  # 海洋
         return TERRAIN_TYPES["OCEAN"]
@@ -44,6 +81,7 @@ def get_terrain_type(color):
         return TERRAIN_TYPES["LAKE"]
     else:
         return TERRAIN_TYPES["PLAIN"]  # 默认平原
+# ----------------------------------------
 
 def get_humidity_level(color):
     """根据颜色判断湿度等级，取值范围 0~10"""
@@ -76,6 +114,8 @@ def normalize_heights(data):
 
     return data
 
+
+# 修改后的取样方法
 def sample_image(image, hex_width, hex_height, sampling_method):
     """对图片进行六边形网格取样"""
     width, height = image.size
@@ -85,6 +125,9 @@ def sample_image(image, hex_width, hex_height, sampling_method):
 
     # 计算总网格数
     total_cells = (height // hex_height) * (width // hex_width)
+
+    # 将图像转换为灰度图像（用于纹理分析）
+    image_gray = np.array(image.convert("L"))
 
     # 初始化进度条
     with tqdm(total=total_cells, desc="取样进度", unit="cell") as pbar:
@@ -114,17 +157,32 @@ def sample_image(image, hex_width, hex_height, sampling_method):
                         avg_color = np.mean(pixels, axis=0)
 
                 if pixels:
-                    terrain_type = get_terrain_type(avg_color)
-                    humidity_level = get_humidity_level(avg_color)
-                    height_level = get_height_level(avg_color)
-                    latitude_level = get_latitude_level(y, height)
+                    # 新增策略：结合纹理和颜色信息
+                    # ----------------------------------------
+                    # 提取当前网格的灰度图像块
+                    patch_gray = image_gray[y:y + hex_height, x:x + hex_width]
+                    
+                    # 基于纹理分类
+                    terrain_type_texture = get_terrain_type_by_texture(patch_gray)
+                    
+                    # 基于颜色分类
+                    terrain_type_color = get_terrain_type_by_color(avg_color)
+                    
+                    # 综合判断（优先使用纹理分类，颜色分类作为辅助）
+                    if terrain_type_texture == TERRAIN_TYPES["PLAIN"] and terrain_type_color == TERRAIN_TYPES["MOUNTAIN"]:
+                        terrain_type = TERRAIN_TYPES["HILL"]  # 修正为丘陵
+                    else:
+                        terrain_type = terrain_type_texture
+                    # ----------------------------------------
+
+                    # 保存结果
                     data.append({
-                        "x": index_x,  # 使用索引值
-                        "y": index_y,  # 使用索引值
+                        "x": index_x,
+                        "y": index_y,
                         "terrain": terrain_type,
-                        "humidity": humidity_level,
-                        "height": height_level,
-                        "latitude": latitude_level
+                        # "humidity": humidity_level,
+                        # "height": height_level,
+                        # "latitude": latitude_level
                     })
                 index_x += 1
                 pbar.update(1)  # 更新进度条
@@ -145,6 +203,7 @@ def sample_image(image, hex_width, hex_height, sampling_method):
             index_y += 1
 
     return data
+
 
 def show_statistics(data):
     """显示统计信息"""
