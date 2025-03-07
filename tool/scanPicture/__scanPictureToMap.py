@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 import json
 import os
+import re
 
 # 定义地形类型
 TERRAIN_TYPES = {
@@ -168,6 +169,29 @@ def show_statistics(data):
         percentage = (count / total_cells) * 100
         print(f"湿度 {range_}: {count} 个，占比 {percentage:.2f}%")
 
+def parse_size_input(size_input):
+    """解析尺寸输入"""
+    # 统一将中文逗号替换为英文逗号
+    size_input = size_input.replace("，", ",")
+    
+    # 判断输入格式
+    if size_input.startswith("("):
+        # 格式为 (1, 30*20) 或 (2, 30*20)
+        pattern = r"\((\d),\s*(\d+)\*(\d+)\)"
+        match = re.match(pattern, size_input)
+        if match:
+            size_type = int(match.group(1))
+            width = int(match.group(2))
+            height = int(match.group(3))
+            return size_type, width, height
+    else:
+        # 格式为 30*20，默认为格式1
+        width, height = map(int, size_input.split("*"))
+        return 1, width, height
+    
+    # 如果输入格式不正确，返回默认值
+    return 1, 30, 20
+
 def main():
     # 弹出命令行窗口，提示用户输入文件名
     default_image_name = "temp_map.png"
@@ -184,30 +208,59 @@ def main():
 
     # 提示用户选择尺寸
     default_size = "30*20"  # 默认尺寸
-    size_input = input(f"请输入六边形网格尺寸（格式：宽度*高度，默认 {default_size}，直接回车使用默认值）：")
-    if size_input:
-        hex_width, hex_height = map(int, size_input.split("*"))
+    size_input = input(f"请输入尺寸（格式：(1, 宽度*高度) 或 (2, 宽度*高度)，默认 {default_size}，直接回车使用默认值）：")
+    size_input = size_input if size_input else default_size
+
+    # 解析尺寸输入
+    size_type, width, height = parse_size_input(size_input)
+
+    # 根据尺寸类型计算六边形网格尺寸
+    if size_type == 1:
+        # 格式1：地图单元格的横纵数量
+        hex_width = image.width // width
+        hex_height = image.height // height
     else:
-        hex_width, hex_height = map(int, default_size.split("*"))
+        # 格式2：六边形网格的尺寸
+        hex_width = width
+        hex_height = height
 
     # 提示用户选择取样方式
     sampling_method = input("请输入取样方式（1: 网格内所有像素平均, 2: 网格中心点范围平均, 默认1）：")
     sampling_method = int(sampling_method) if sampling_method else 1
 
-    # 取样
-    data = sample_image(image, hex_width, hex_height, sampling_method)
+    # 提示用户选择取样种类
+    sampling_type = input("请输入取样种类（1: 仅地形数据, 2: 所有数据, 默认1）：")
+    sampling_type = int(sampling_type) if sampling_type else 1
 
     # 提示用户是否填满高度
     fill_height = input("是否填满高度（y/n，默认 y）：")
     if fill_height.lower() != 'n':
-        data = normalize_heights(data)
+        normalize_height = True
+    else:
+        normalize_height = False
 
     # 提示用户是否显示统计信息
     show_stats = input("是否显示统计信息（y/n，默认 y）：")
     if show_stats.lower() != 'n':
+        show_statistics_flag = True
+    else:
+        show_statistics_flag = False
+
+    # 取样
+    data = sample_image(image, hex_width, hex_height, sampling_method)
+
+    # 根据取样种类过滤数据
+    if sampling_type == 1:
+        data = [{"x": d["x"], "y": d["y"], "terrain": d["terrain"]} for d in data]
+
+    # 填满高度
+    if normalize_height:
+        data = normalize_heights(data)
+
+    # 显示统计信息
+    if show_statistics_flag:
         show_statistics(data)
 
-    
     # 保存为JSON文件
     output_path = "map_data.json"
     with open(output_path, "w") as f:
