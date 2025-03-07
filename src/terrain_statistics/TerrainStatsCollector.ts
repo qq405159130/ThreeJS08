@@ -10,11 +10,10 @@ export class TerrainStatsCollector {
             const terrain = cell.data.terrainType;
             counts.set(terrain, (counts.get(terrain) || 0) + 1);
         });
-        console.warn("（调试）地形统计器 counts   \n" + Array.from(counts.values()));
-        return {
-            counts,
-            proportions: this.calculateProportions(counts, cells.length),
-        };
+        console.warn("（调试）地形统计器 counts   \n" + Array.from(counts.entries()));
+        const proportions = this.calculateProportions(counts, cells.length);
+        console.warn("（调试）地形统计器 proportions   \n" + Array.from(proportions.entries()));
+        return { counts, proportions };
     }
 
     private calculateProportions(counts: Map<eTerrain, number>, total: number) {

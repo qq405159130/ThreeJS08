@@ -14,9 +14,14 @@ export class StatisticsLogger {
 
     private static logTerrain(stats: TerrainStats) {
         console.group('地形统计');
+        console.log('Terrain counts:', stats.counts);
+        console.log('Terrain proportions:', stats.proportions);
+    
         stats.counts.forEach((count, terrain) => {
-            console.log(`${eTerrain[terrain]}: ${count} (${stats.proportions.get(terrain)! * 100}%)`);
+            const proportion = stats.proportions.get(terrain) || 0;
+            console.log(`${eTerrain[terrain]}: ${count} (${proportion * 100}%)`);
         });
+    
         console.groupEnd();
     }
 
