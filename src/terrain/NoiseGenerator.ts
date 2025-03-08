@@ -1,3 +1,4 @@
+//#ignore_export
 import { makeNoise2D } from 'fast-simplex-noise';
 
 export class NoiseGenerator {

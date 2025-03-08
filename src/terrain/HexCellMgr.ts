@@ -74,4 +74,27 @@ export class HexCellMgr {
 
         return JSON.stringify(cellsArray, null, 2);
     }
+
+    // 导出为 CSV 格式
+    public exportToCsv(): string {
+        const headers = [
+            'x', 'y', 'terrain', 'height',
+            //  'humidity', 'resourceType', 'buildType', 'riverLevel', 'isBridge', 'isRoad'
+        ].join(',');
+
+        const rows = Array.from(this.cells.values()).map(cell => [
+            cell.data.q,
+            cell.data.r,
+            cell.data.terrainType,
+            // cell.data.height,
+            // cell.data.humidity,
+            // cell.data.resourceType || '',
+            // cell.data.buildType || '',
+            // cell.data.riverLevel,
+            // cell.data.isBridge,
+            // cell.data.isRoad
+        ].join(','));
+
+        return [headers, ...rows].join('\n');
+    }
 }

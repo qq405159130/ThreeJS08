@@ -43,8 +43,7 @@ export class MapGenerator {
 
         this.initializeGrid();
 
-        await this.generateHeightMap('json');
-        await this.classifyTerrain();
+        await this.generateBasicTerrain('json');
         await this.generateRivers();
         await this.generateClimate();
         await this.generateTerrainFace();
@@ -59,11 +58,12 @@ export class MapGenerator {
     }
 
 
-    @logExecutionTime("生成高度图")
-    public async generateHeightMap(mode: 'noise' | 'json' = 'noise'): Promise<void> {
+    @logExecutionTime("生成基本地形")
+    public async generateBasicTerrain(mode: 'noise' | 'json' = 'noise'): Promise<void> {
         if (mode === 'noise') {
             const noisePath = process.env.NODE_ENV === 'production' ? '/noise.png' : '../public/noise.png';
             await this.generateHeightMapFromNoise(noisePath);
+            await this.classifyTerrainByHeight();
         } else if (mode === 'json') {
             const jsonPath = process.env.NODE_ENV === 'production' ? '/map_data.json' : '../public/map_data.json'; // JSON 文件路径
             await this.generateHeightMapFromJSON(jsonPath);
@@ -87,8 +87,6 @@ export class MapGenerator {
         // );
         const noiseGen = new NoiseTextureLoader();
         await noiseGen.loadNoiseTexture(noisePath);
-        // await noiseGen.loadNoiseTexture('../public/noise.png');//本地能加载成功。
-        // await noiseGen.loadNoiseTexture('/noise.png');//本地也加载失败了；
         const noiseMap = await noiseGen.generateNoiseMap(width, height);
 
         // 计算高度等级阈值
@@ -102,34 +100,22 @@ export class MapGenerator {
         this.cellDatas.forEach(cell => {
             const idx = cell.data.q * height + cell.data.r;
             const heightValue = noiseMap[idx];
-
-            let level: eHeightLevel;
-            if (heightValue < this.heightThresholds.height1) {
-                level = eHeightLevel.None;
-            } else if (heightValue < this.heightThresholds.height2) {
-                level = eHeightLevel.Level1;
-            } else if (heightValue < this.heightThresholds.height3) {
-                level = eHeightLevel.Level2;
-            } else if (heightValue < this.heightThresholds.height4) {
-                level = eHeightLevel.Level3;
-            } else {
-                level = eHeightLevel.Level4;
-            }
-
-            cell.setHeight(heightValue, level);
+            cell.setHeight(heightValue, this.getHeightLevel(heightValue));
         });
     }
 
     private async generateHeightMapFromJSON(jsonPath: string): Promise<void> {
         const response = await fetch(jsonPath);
         const data = await response.json();
+        // const json = JSON.parse(data);//data是什么，这里报错了
+        // console.warn(json)
 
         // 遍历 JSON 数据，设置单元格高度
-        data.forEach((cellData: { x: number; y: number; height: number }) => {
+        data.forEach((cellData: { x: number; y: number; terrain: eTerrain; height: number }) => {
             const cell = this.cellDatas.get(`${cellData.x},${cellData.y}`);
             if (cell) {
-                // 将高度值映射到 0~1 范围（假设 JSON 中的高度是 0~255）
-                const heightValue = cellData.height / 255;
+                cell.setTerrain(cellData.terrain, eTerrainFace.Grassland);
+                const heightValue = cellData.height;
                 cell.setHeight(heightValue, this.getHeightLevel(heightValue));
             }
         });
@@ -149,8 +135,7 @@ export class MapGenerator {
         }
     }
 
-    @logExecutionTime("生成地形")
-    private async classifyTerrain(): Promise<void> {
+    private async classifyTerrainByHeight(): Promise<void> {
         this.cellDatas.forEach(cell => {
             const { heightLevel, height } = cell.data;
             let terrain: eTerrain;
@@ -385,9 +370,11 @@ export class MapGenerator {
     private saveMap(): void {
         // 导出 HexCell 数据为 JSON 文件
         const jsonData = ServiceManager.getInstance().getHexCellMgr().exportToJson();
-        console.log(jsonData); // 打印到控制台
-        // 将数据保存到文件
         this.saveJsonToFile(jsonData, 'exported_map_data.json');
+
+        // // 导出 CSV 数据
+        // const csvData = ServiceManager.getInstance().getHexCellMgr().exportToCsv();
+        // this.saveJsonToFile(csvData, 'exported_map_data.csv');
     }
 
     // 保存 JSON 数据到文件并提供下载链接
