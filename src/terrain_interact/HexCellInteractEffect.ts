@@ -270,6 +270,10 @@ export class HexCellInteractEffect {
                 opacity: 0.8,
             });
             this.particles = new THREE.Points(this.particleGeometry, this.particleMaterial);
+            //避免干扰
+            this.particles.castShadow = false;
+            this.particles.receiveShadow = false;
+            this.particles.raycast = () => null;
             this.particles.visible = false;
             this.mesh.add(this.particles);
         }
