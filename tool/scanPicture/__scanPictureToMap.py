@@ -44,6 +44,33 @@ TERRAIN_NAMES = {
     5: "湖泊"
 }
 
+# 预置颜色分类规则（RGB格式）
+PRESET_COLOR_RULES = {
+    "OCEAN": (0x8C, 0xD3, 0xFD),  # 青蓝色的海洋
+    "HIGH_MOUNTAIN": (0xEA, 0x3F, 0x12),  # 红橙色的最高山
+    "MOUNTAIN": (0xFF, 0xC8, 0x03),  # 橙黄色的山脉
+    "HILL": (0xFF, 0xF4, 0x9B),  # 浅橙黄色的山脉
+    "PLAIN": (0x75, 0xBC, 0x54),  # 绿色的平原
+    "PLAIN": (0xC3, 0xE1, 0x82),  # 黄绿色的平原
+}
+
+# 将RGB颜色转换为HSV格式
+def rgb_to_hsv(rgb):
+    """
+    将RGB颜色转换为HSV格式
+    :param rgb: RGB颜色值（元组形式，如 (R, G, B)）
+    :return: HSV颜色值（元组形式，如 (H, S, V)）
+    """
+    r, g, b = rgb
+    r_norm = r / 255.0
+    g_norm = g / 255.0
+    b_norm = b / 255.0
+    h, s, v = rgb2hsv(np.array([[[r_norm, g_norm, b_norm]]]))[0, 0]
+    return h, s, v
+
+# 预置颜色分类规则（HSV格式）
+PRESET_COLOR_RULES_HSV = {terrain: rgb_to_hsv(rgb) for terrain, rgb in PRESET_COLOR_RULES.items()}
+
 # 新增方法：分析图像的颜色分布
 # ----------------------------------------
 def analyze_color_distribution(image):
@@ -68,12 +95,18 @@ def analyze_color_distribution(image):
     
     return color_distribution
 
+
+
 def extract_color_features(color_distribution):
     """
-    根据颜色分布提取关键颜色特征
+    根据颜色分布提取关键颜色特征，并补充预置颜色分类规则
     :param color_distribution: 颜色分布统计结果
     :return: 颜色分类规则（字典形式）
     """
+    # 如果没有颜色分布数据，直接返回预置规则
+    if not color_distribution:
+        return PRESET_COLOR_RULES_HSV
+
     # 使用K-means聚类提取主要颜色
     colors = np.array(list(color_distribution.keys()))
     kmeans = KMeans(n_clusters=6)  # 假设有6种主要地形
@@ -86,18 +119,23 @@ def extract_color_features(color_distribution):
     color_rules = {}
     for center in color_centers:
         h, s, v = center
-        if v < 0.3 and 0.6 < h < 0.7:
+        if v < 0.3 and 0.5 < h < 0.7:  # 青蓝色区域（海洋）
             color_rules["OCEAN"] = (h, s, v)
-        elif s < 0.2 and 0.2 < h < 0.4:
+        elif s < 0.2:  # 低饱和度区域（平原）
             color_rules["PLAIN"] = (h, s, v)
-        elif 0.05 < h < 0.15 and 0.3 < v < 0.7:
+        elif 0.05 < h < 0.15 and 0.3 < v < 0.7:  # 橙黄色区域（丘陵）
             color_rules["HILL"] = (h, s, v)
-        elif 0.9 < h < 1.0 or 0.0 < h < 0.05:
+        elif 0.9 < h < 1.0 or 0.0 < h < 0.05:  # 红色区域（山地）
             color_rules["MOUNTAIN"] = (h, s, v)
-        elif s > 0.5 and v > 0.8:
+        elif s > 0.5 and v > 0.8:  # 高饱和度、高亮度区域（高山）
             color_rules["HIGH_MOUNTAIN"] = (h, s, v)
-        elif 0.6 < h < 0.7 and 0.3 < s < 0.6:
+        elif 0.6 < h < 0.7 and 0.3 < s < 0.6:  # 蓝色区域（湖泊）
             color_rules["LAKE"] = (h, s, v)
+    
+    # 合并预置颜色分类规则
+    for terrain, hsv in PRESET_COLOR_RULES_HSV.items():
+        if terrain not in color_rules:  # 如果当前规则中没有该地形，则补充预置规则
+            color_rules[terrain] = hsv
     
     return color_rules
 # ----------------------------------------
@@ -115,9 +153,9 @@ def get_terrain_type_by_color(color, color_rules):
     h, s, v = rgb2hsv(np.array(color).reshape(1, 1, 3)).reshape(3)
     
     # 根据动态颜色规则分类
-    if "OCEAN" in color_rules and v < 0.3 and 0.6 < h < 0.7:
+    if "OCEAN" in color_rules and 0.5 < h < 0.7 and s > 0.2:  # 青蓝色区域
         return TERRAIN_TYPES["OCEAN"]
-    elif "PLAIN" in color_rules and s < 0.2 and 0.2 < h < 0.4:
+    elif "PLAIN" in color_rules and s < 0.2:  # 低饱和度区域
         return TERRAIN_TYPES["PLAIN"]
     elif "HILL" in color_rules and 0.05 < h < 0.15 and 0.3 < v < 0.7:
         return TERRAIN_TYPES["HILL"]
@@ -149,6 +187,8 @@ def get_terrain_type_by_texture(patch):
     # 根据纹理特征分类（规则优化）
     if contrast > 0.5 and energy < 0.2:
         return TERRAIN_TYPES["MOUNTAIN"]  # 山地
+    elif contrast < 0.1 and energy < 0.2:  # 海洋区域通常具有较低的对比度和能量
+        return TERRAIN_TYPES["OCEAN"]  # 海洋
     elif contrast < 0.2 and energy > 0.5:
         return TERRAIN_TYPES["PLAIN"]  # 平原
     elif correlation > 0.7 and homogeneity > 0.6:
@@ -168,15 +208,19 @@ def get_terrain_type_by_texture_and_color(patch, color, color_rules):
     :param color_rules: 颜色分类规则
     :return: 地形类型
     """
-    # 基于纹理分类
-    terrain_type_texture = get_terrain_type_by_texture(patch)
-    
     # 基于颜色分类（动态调整版）
     terrain_type_color = get_terrain_type_by_color(color, color_rules)
     
-    # 协调规则：优先使用纹理分类，但当颜色分类为湖泊或海洋时，优先使用颜色分类
-    if terrain_type_color in [TERRAIN_TYPES["OCEAN"], TERRAIN_TYPES["LAKE"]]:
-        return terrain_type_color
+    # 如果颜色分类为海洋，则直接返回海洋
+    if terrain_type_color == TERRAIN_TYPES["OCEAN"]:
+        return TERRAIN_TYPES["OCEAN"]
+    
+    # 否则，基于纹理分类
+    terrain_type_texture = get_terrain_type_by_texture(patch)
+    
+    # 协调规则：优先使用纹理分类，但当颜色分类为湖泊时，优先使用颜色分类
+    if terrain_type_color == TERRAIN_TYPES["LAKE"]:
+        return TERRAIN_TYPES["LAKE"]
     else:
         return terrain_type_texture
 # ----------------------------------------
@@ -362,10 +406,37 @@ def parse_size_input(size_input):
     # 如果输入格式不正确，返回默认值
     return 1, 30, 20
 
+def print_color_rules(color_rules):
+    """
+    以友好的格式打印颜色分类规则
+    :param color_rules: 颜色分类规则
+    """
+    if not color_rules:
+        print("\n=== 颜色分类规则为空 ===")
+        print("可能是颜色分布分析失败，请检查输入图像。")
+        print("===================\n")
+        return
+
+    print("\n=== 颜色分类规则 ===")
+    for terrain, (h, s, v) in color_rules.items():
+        source = "预置" if terrain in PRESET_COLOR_RULES_HSV else "提取"
+        print(f"{terrain}: 色调(H)={h:.2f}, 饱和度(S)={s:.2f}, 亮度(V)={v:.2f} ({source})")
+    print("===================\n")
+
+def check_exit(user_input):
+    """
+    检查用户输入是否为 'q'，如果是则退出程序
+    :param user_input: 用户输入
+    """
+    if user_input.lower() == 'q':
+        print("用户选择退出程序。")
+        exit()
+
 def main():
     # 弹出命令行窗口，提示用户输入文件名
     default_image_name = "temp_map.png"
     image_name = input(f"请输入地图图片文件名（默认 {default_image_name}，直接回车使用默认值）：")
+    check_exit(image_name)  # 检查是否退出
     image_name = image_name if image_name else default_image_name
 
     # 检查文件是否存在
@@ -380,9 +451,13 @@ def main():
     color_distribution = analyze_color_distribution(image)
     color_rules = extract_color_features(color_distribution)
 
+    # 打印颜色分类规则
+    print_color_rules(color_rules)
+
     # 提示用户选择尺寸
     default_size = "30*20"  # 默认尺寸
     size_input = input(f"请输入尺寸（格式：(1, 宽度*高度) 或 (2, 宽度*高度)，默认 {default_size}，直接回车使用默认值）：")
+    check_exit(size_input)  # 检查是否退出
     size_input = size_input if size_input else default_size
 
     # 解析尺寸输入
@@ -400,14 +475,17 @@ def main():
 
     # 提示用户选择取样方式
     sampling_method = input("请输入取样方式（1: 网格内所有像素平均, 2: 网格中心点范围平均, 默认1）：")
+    check_exit(sampling_method)
     sampling_method = int(sampling_method) if sampling_method else 1
 
     # 提示用户选择取样种类
     sampling_type = input("请输入取样种类（1: 仅地形数据, 2: 所有数据, 默认1）：")
+    check_exit(sampling_type)
     sampling_type = int(sampling_type) if sampling_type else 1
 
     # 提示用户是否填满高度
     fill_height = input("是否填满高度（y/n，默认 y）：")
+    check_exit(fill_height)
     if fill_height.lower() != 'n':
         normalize_height = True
     else:
@@ -415,6 +493,7 @@ def main():
 
     # 提示用户是否显示统计信息
     show_stats = input("是否显示统计信息（y/n，默认 y）：")
+    check_exit(show_stats)
     if show_stats.lower() != 'n':
         show_statistics_flag = True
     else:
