@@ -98,16 +98,16 @@ def flatten_and_save_structure(root_folder, src_relative, dest_relative, structu
                 for file in files:
                     if file.endswith(('.ts', '.tsx', '.css', '.html', '.js')):
                         file_path = os.path.join(root, file)
-                        # 检查文件是否全部被注释
-                        if is_fully_commented(file_path):
-                            print(f"文件 {file} 被完全注释，跳过处理。")
-                            continue
-                        # 检查文件第一行是否包含忽略标识
+                        # 先检查文件第一行是否包含忽略标识
                         with open(file_path, 'r', encoding='utf-8') as src_file:
                             first_line = src_file.readline()
                             if first_line.strip() == IGNORE_EXPORT_MARKER:
                                 print(f"文件 {file} 包含 {IGNORE_EXPORT_MARKER}，跳过处理。")
                                 continue
+                        # 再检查文件是否全部被注释
+                        if is_fully_commented(file_path):
+                            print(f"文件 {file} 被完全注释，跳过处理。")
+                            continue
                         # 写入文件名作为分隔符
                         all_code.write(f"\n\n// === File: {file} ===\n\n")
                         # 写入文件内容
@@ -124,16 +124,16 @@ def flatten_and_save_structure(root_folder, src_relative, dest_relative, structu
         for file in files:
             if file.endswith(('.ts', '.tsx', '.css', '.html', '.js')):
                 src_file_path = os.path.join(root, file)
-                # 检查文件是否全部被注释
-                if is_fully_commented(src_file_path):
-                    print(f"文件 {file} 被完全注释，跳过处理。")
-                    continue
-                # 检查文件第一行是否包含忽略标识
+                # 先检查文件第一行是否包含忽略标识
                 with open(src_file_path, 'r', encoding='utf-8') as src_file:
                     first_line = src_file.readline()
                     if first_line.strip() == IGNORE_EXPORT_MARKER:
                         print(f"文件 {file} 包含 {IGNORE_EXPORT_MARKER}，跳过处理。")
                         continue
+                # 再检查文件是否全部被注释
+                if is_fully_commented(src_file_path):
+                    print(f"文件 {file} 被完全注释，跳过处理。")
+                    continue
                 dest_file_path = os.path.join(dest_folder, file)
                 # 直接覆盖文件
                 shutil.copy2(src_file_path, dest_file_path)
@@ -309,16 +309,16 @@ def show_options():
                 for file in files:
                     if file.endswith(('.ts', '.tsx', '.css', '.html', '.js')):
                         file_path = os.path.join(root, file)
-                        # 检查文件是否全部被注释
-                        if is_fully_commented(file_path):
-                            print(f"文件 {file} 被完全注释，跳过处理。")
-                            continue
-                        # 检查文件第一行是否包含忽略标识
+                        # 先检查文件第一行是否包含忽略标识
                         with open(file_path, 'r', encoding='utf-8') as src_file:
                             first_line = src_file.readline()
                             if first_line.strip() == IGNORE_EXPORT_MARKER:
                                 print(f"文件 {file} 包含 {IGNORE_EXPORT_MARKER}，跳过处理。")
                                 continue
+                        # 再检查文件是否全部被注释
+                        if is_fully_commented(file_path):
+                            print(f"文件 {file} 被完全注释，跳过处理。")
+                            continue
                         # 写入文件名作为分隔符
                         all_code.write(f"\n\n// === File: {file} ===\n\n")
                         # 写入文件内容

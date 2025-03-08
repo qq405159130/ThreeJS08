@@ -225,15 +225,32 @@ def get_terrain_type_by_texture_and_color(patch, color, color_rules):
         return terrain_type_texture
 # ----------------------------------------
 
+def get_height_by_terrain(terrain_type):
+    """
+    根据地形类型计算高度值
+    :param terrain_type: 地形类型（整数）
+    :return: 高度值（0~255）
+    """
+    if terrain_type == TERRAIN_TYPES["OCEAN"]:
+        return 0  # 海洋高度最低
+    elif terrain_type == TERRAIN_TYPES["PLAIN"]:
+        return 50  # 平原高度较低
+    elif terrain_type == TERRAIN_TYPES["HILL"]:
+        return 100  # 丘陵高度中等
+    elif terrain_type == TERRAIN_TYPES["MOUNTAIN"]:
+        return 150  # 山地高度较高
+    elif terrain_type == TERRAIN_TYPES["HIGH_MOUNTAIN"]:
+        return 200  # 高山高度最高
+    elif terrain_type == TERRAIN_TYPES["LAKE"]:
+        return 30  # 湖泊高度较低
+    else:
+        return 128  # 默认高度
+
 def get_humidity_level(color):
     """根据颜色判断湿度等级，取值范围 0~10"""
     r, g, b = color
     return int((g / 255) * 10)  # 湿度范围为 0~10
 
-def get_height_level(color):
-    """根据颜色判断高度等级，取值范围 0~255"""
-    r, g, b = color
-    return int(r)  # 高度范围为 0~255
 
 def get_latitude_level(y, height):
     """根据Y坐标判断纬度等级，取值范围 0~5"""
@@ -257,7 +274,6 @@ def normalize_heights(data):
     return data
 
 
-# 修改后的取样方法
 def sample_image(image, hex_width, hex_height, sampling_method, color_rules):
     """对图片进行六边形网格取样"""
     width, height = image.size
@@ -305,13 +321,16 @@ def sample_image(image, hex_width, hex_height, sampling_method, color_rules):
                     # 使用纹理和颜色协调分类
                     terrain_type = get_terrain_type_by_texture_and_color(patch_gray, avg_color, color_rules)
                     
+                    # 根据地形类型计算高度
+                    height_level = get_height_by_terrain(terrain_type)
+                    
                     # 保存结果
                     data.append({
                         "x": index_x,
                         "y": index_y,
                         "terrain": terrain_type,
+                        "height": height_level,
                         # "humidity": humidity_level,
-                        # "height": height_level,
                         # "latitude": latitude_level
                     })
                 index_x += 1
@@ -435,7 +454,7 @@ def check_exit(user_input):
 def main():
     # 弹出命令行窗口，提示用户输入文件名
     default_image_name = "temp_map.png"
-    image_name = input(f"请输入地图图片文件名（默认 {default_image_name}，直接回车使用默认值）：")
+    image_name = input(f"[第1/6步] 请输入地图图片文件名（默认 {default_image_name}，直接回车使用默认值）：")
     check_exit(image_name)  # 检查是否退出
     image_name = image_name if image_name else default_image_name
 
@@ -456,7 +475,7 @@ def main():
 
     # 提示用户选择尺寸
     default_size = "30*20"  # 默认尺寸
-    size_input = input(f"请输入尺寸（格式：(1, 宽度*高度) 或 (2, 宽度*高度)，默认 {default_size}，直接回车使用默认值）：")
+    size_input = input(f"[第2/6步] 请输入尺寸（格式：(1, 宽度*高度) 或 (2, 宽度*高度)，默认 {default_size}，直接回车使用默认值）：")
     check_exit(size_input)  # 检查是否退出
     size_input = size_input if size_input else default_size
 
@@ -474,17 +493,17 @@ def main():
         hex_height = height
 
     # 提示用户选择取样方式
-    sampling_method = input("请输入取样方式（1: 网格内所有像素平均, 2: 网格中心点范围平均, 默认1）：")
+    sampling_method = input("[第3/6步] 请输入取样方式（1: 网格内所有像素平均, 2: 网格中心点范围平均, 默认1）：")
     check_exit(sampling_method)
     sampling_method = int(sampling_method) if sampling_method else 1
 
     # 提示用户选择取样种类
-    sampling_type = input("请输入取样种类（1: 仅地形数据, 2: 所有数据, 默认1）：")
+    sampling_type = input("[第4/6步] 请输入取样种类（1: 仅地形和高度数据, 2: 所有数据, 默认1）：")
     check_exit(sampling_type)
     sampling_type = int(sampling_type) if sampling_type else 1
 
     # 提示用户是否填满高度
-    fill_height = input("是否填满高度（y/n，默认 y）：")
+    fill_height = input("[第5/6步] 是否填满高度（y/n，默认 y）：")
     check_exit(fill_height)
     if fill_height.lower() != 'n':
         normalize_height = True
@@ -492,7 +511,7 @@ def main():
         normalize_height = False
 
     # 提示用户是否显示统计信息
-    show_stats = input("是否显示统计信息（y/n，默认 y）：")
+    show_stats = input("[第6/6步] 是否显示统计信息（y/n，默认 y）：")
     check_exit(show_stats)
     if show_stats.lower() != 'n':
         show_statistics_flag = True
@@ -504,13 +523,13 @@ def main():
 
     # 根据取样种类过滤数据
     if sampling_type == 1:
-        data = [{"x": d["x"], "y": d["y"], "terrain": d["terrain"]} for d in data]
+        data = [{"x": d["x"], "y": d["y"], "terrain": d["terrain"], "height": d.get("height", 128)} for d in data]
     else:
         # 如果用户选择取样种类为 2（所有数据），则保留所有字段
         pass
 
     # 填满高度（仅在数据中包含 height 字段时执行）
-    if normalize_height and sampling_type == 2:
+    if normalize_height:
         data = normalize_heights(data)
 
     # 显示统计信息
