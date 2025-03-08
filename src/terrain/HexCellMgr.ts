@@ -27,7 +27,6 @@ export class HexCellMgr {
             cell.data.isBridge = data.isBridge;
             cell.data.isRoad = data.isRoad;
         }
-        // console.warn("addOrUpdateCell  ID: " + this.ID);
         this.ID++;
         return cell;
     }
@@ -56,5 +55,23 @@ export class HexCellMgr {
     // 清除所有单元格
     public clear(): void {
         this.cells.clear();
+    }
+
+    // 导出 HexCell 数据为 JSON 格式
+    public exportToJson(): string {
+        const cellsArray = Array.from(this.cells.values()).map(cell => ({
+            x: cell.data.q,
+            y: cell.data.r,
+            terrain: cell.data.terrainType,
+            // height: cell.data.height,
+            // humidity: cell.data.humidity,
+            // resourceType: cell.data.resourceType,
+            // buildType: cell.data.buildType,
+            // riverLevel: cell.data.riverLevel,
+            // isBridge: cell.data.isBridge,
+            // isRoad: cell.data.isRoad
+        }));
+
+        return JSON.stringify(cellsArray, null, 2);
     }
 }

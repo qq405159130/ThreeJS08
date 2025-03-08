@@ -49,7 +49,11 @@ export class MapGenerator {
         await this.generateTerrainFace();
         await this.generateResources();
         await this.generateCities();
+
         this.showStatistics();
+
+        this.saveMap();
+
         return Array.from(this.cellDatas.values()).map(cell => cell.data);
     }
 
@@ -368,11 +372,40 @@ export class MapGenerator {
     private statisticsCoordinator = new MapStatisticsCoordinator();
     private getStatistics(): MapStatistics {
         const cells = Array.from(this.cellDatas.values());
+        console.warn("before getStatistics , cells:" + cells.length);
         return this.statisticsCoordinator.generate(cells);
     }
 
     private showStatistics(): void {
         const stats = this.getStatistics();
         StatisticsLogger.log(stats);
+    }
+
+    private saveMap(): void {
+        // 导出 HexCell 数据为 JSON 文件
+        const jsonData = ServiceManager.getInstance().getHexCellMgr().exportToJson();
+        console.log(jsonData); // 打印到控制台
+        // 将数据保存到文件
+        this.saveJsonToFile(jsonData, 'exported_map_data.json');
+    }
+
+    // 保存 JSON 数据到文件并提供下载链接
+    private saveJsonToFile(jsonData: string, fileName: string): void {
+        // 创建一个 Blob 对象
+        const blob = new Blob([jsonData], { type: 'application/json' });
+
+        // 创建一个下载链接
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName; // 设置下载文件名
+        document.body.appendChild(a); // 将链接添加到页面中
+        a.click(); // 触发下载
+
+        // 清理 URL 对象
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a); // 移除链接
+
+        console.log(`地图数据已保存为文件: ${fileName}`);
     }
 }
