@@ -1,4 +1,5 @@
 
+//#ignore_export
 export type StatValue = 
   | number 
   | Map<string | number, number> 

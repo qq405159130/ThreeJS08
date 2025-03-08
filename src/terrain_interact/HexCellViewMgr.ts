@@ -5,7 +5,6 @@ import { HexCellData } from '@/terrain/types';
 import { MapViewUtils } from '../terrain_view/MapViewUtils';
 import { eTerrain } from '@/terrain/enums';
 import { ServiceManager } from '@/utils/ServiceManager';
-import { Config } from '@/config';
 
 
 export class HexCellViewMgr {

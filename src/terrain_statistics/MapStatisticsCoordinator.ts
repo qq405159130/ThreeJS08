@@ -1,3 +1,4 @@
+//#ignore_export
 import { HexCell } from "@/terrain/HexCell";
 import { eResource, eTerrain } from "@/terrain/enums";
 import { MapStatistics, StatValue } from "./TerrainStatsTypes";

@@ -1,11 +1,11 @@
 /** 地形 */
 export enum eTerrain {
-    Ocean,
-    Plain,
-    Hill,
-    Mountain,
-    HighMountain,
-    Lake
+    Ocean = 0,
+    Plain = 1,
+    Hill = 2,
+    Mountain = 3,
+    HighMountain = 4,
+    Lake = 5
 }
 
 /** 地貌 */

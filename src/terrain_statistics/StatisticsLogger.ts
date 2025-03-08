@@ -1,3 +1,4 @@
+//#ignore_export
 import { eResource, eTerrain } from "@/terrain/enums";
 import { MapStatistics } from "./TerrainStatsTypes";
 

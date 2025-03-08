@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { EventManager } from '../utils/EventManager';
 import { HexCellData } from '../terrain/types';
-import { Config } from '../config';
 
 export class HexCellView {
     public mesh: THREE.Mesh; // 六边形网格的3D对象

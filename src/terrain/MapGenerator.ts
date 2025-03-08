@@ -11,6 +11,7 @@ import { logExecutionTime } from '@/_decorator/logExecutionTime';
 import { MapStatistics } from '@/terrain_statistics/TerrainStatsTypes';
 import { MapStatisticsCoordinator } from '@/terrain_statistics/MapStatisticsCoordinator';
 import { StatisticsLogger } from '@/terrain_statistics/StatisticsLogger';
+import { Config } from '@/config';
 
 export class MapGenerator {
     private get cellDatas(): Map<string, HexCell> {
@@ -52,7 +53,7 @@ export class MapGenerator {
 
         this.showStatistics();
 
-        this.saveMap();
+        Config.isSaveMap && this.saveMap();
 
         return Array.from(this.cellDatas.values()).map(cell => cell.data);
     }
