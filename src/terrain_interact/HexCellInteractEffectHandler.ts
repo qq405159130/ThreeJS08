@@ -4,6 +4,8 @@ import { PoolSystem } from '@/base/PoolSystem';
 import { Config } from '@/config';
 // import { Pool } from 'object-pool'; //需要在项目中安装插件//yarn add object-pool //yarn add @types/object-pool --dev
 //想安装但失败了 //yarn add three-pool-manager yarn add @types/three-pool-manager --dev
+
+
 export class HexCellInteractEffectHandler {
     private hoverEffects: Map<string, HexCellInteractEffect> = new Map(); // 六边形网格与 hover 效果的映射
     private currentHoverEffect: HexCellInteractEffect[] = []; // 当前 hover 的效果
@@ -102,17 +104,8 @@ export class HexCellInteractEffectHandler {
                 this.restoreEffect(hoverEffect);
             }
         });
-    }
 
-
-    private _hideHoverEffect(): void {
-        if (this.currentHoverEffect.length != 0) {
-            this.currentHoverEffect.forEach(effect => {
-                effect.hideHover();
-                this.restoreEffect(effect);
-            });
-        }
-        this.currentHoverEffect.length = 0;
+        // this.currentHoverEffect.indexOf()
     }
 
 
@@ -138,16 +131,6 @@ export class HexCellInteractEffectHandler {
             hoverEffect.hideSelect();
             this.restoreEffect(hoverEffect);
         });
-    }
-
-    private _hideSelectEffect(): void {
-        if (this.currentSelectEffects.length != 0) {
-            this.currentSelectEffects.forEach(effect => {
-                effect.hideSelect();
-                this.restoreEffect(effect);
-            }); // 隐藏上一个选中效果
-        }
-        this.currentSelectEffects.length = 0;
     }
 
 }
