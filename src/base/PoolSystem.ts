@@ -2,14 +2,63 @@
 //#ignore_export
 import * as THREE from 'three';
 
-
-
 type Constructor<T> = new (...args: any[]) => T;
 type ResetFn<T> = (obj: T) => void;
 type CreateFn<T> = () => T;
 
-export class PoolSystem {
-    private pools: Map<string, { pool: any[]; create: CreateFn<any>; reset?: ResetFn<any> }>;
+class Pool<T> {
+    private pool: T[];
+    private createFn: CreateFn<T>;
+    private resetFn?: ResetFn<T>;
+
+    constructor(createFn: CreateFn<T>, resetFn?: ResetFn<T>) {
+        this.pool = [];
+        this.createFn = createFn;
+        this.resetFn = resetFn;
+    }
+
+    /**
+     * 从对象池中获取一个对象
+     * @returns 对象实例
+     */
+    acquire(): T {
+        if (this.pool.length > 0) {
+            return this.pool.pop()!;
+        }
+        return this.createFn();
+    }
+
+    /**
+     * 将对象归还到对象池
+     * @param obj 对象实例
+     */
+    release(obj: T): void {
+        if (this.resetFn) {
+            this.resetFn(obj);
+        }
+        this.pool.push(obj);
+    }
+
+    /**
+     * 清空对象池
+     */
+    clear(): void {
+        this.pool = [];
+    }
+
+    /**
+     * 获取当前对象池的大小
+     * @returns 对象池的大小
+     */
+    size(): number {
+        return this.pool.length;
+    }
+}
+
+
+
+class PoolSystem {
+    private pools: Map<string, Pool<any>>;
 
     constructor() {
         this.pools = new Map();
@@ -21,12 +70,8 @@ export class PoolSystem {
      * @param createFn 对象创建函数
      * @param resetFn 对象重置函数（可选）
      */
-    public register<T>(type: string, createFn: CreateFn<T>, resetFn?: ResetFn<T>): void {
-        this.pools.set(type, {
-            pool: [],
-            create: createFn,
-            reset: resetFn,
-        });
+    register<T>(type: string, createFn: CreateFn<T>, resetFn?: ResetFn<T>): void {
+        this.pools.set(type, new Pool(createFn, resetFn));
     }
 
     /**
@@ -34,17 +79,12 @@ export class PoolSystem {
      * @param type 对象类型标识
      * @returns 对象实例
      */
-    public acquire<T>(type: string): T {
-        const poolData = this.pools.get(type);
-        if (!poolData) {
+    acquire<T>(type: string): T {
+        const pool = this.pools.get(type);
+        if (!pool) {
             throw new Error(`Pool for type "${type}" not found.`);
         }
-
-        const { pool, create } = poolData;
-        if (pool.length > 0) {
-            return pool.pop();
-        }
-        return create();
+        return pool.acquire();
     }
 
     /**
@@ -52,35 +92,43 @@ export class PoolSystem {
      * @param type 对象类型标识
      * @param obj 对象实例
      */
-    public release<T>(type: string, obj: T): void {
-        const poolData = this.pools.get(type);
-        if (!poolData) {
+    release<T>(type: string, obj: T): void {
+        const pool = this.pools.get(type);
+        if (!pool) {
             throw new Error(`Pool for type "${type}" not found.`);
         }
-
-        const { pool, reset } = poolData;
-        if (reset) {
-            reset(obj);
-        }
-        pool.push(obj);
+        pool.release(obj);
     }
 
     /**
      * 清空指定类型的对象池
      * @param type 对象类型标识
      */
-    public clear(type: string): void {
-        const poolData = this.pools.get(type);
-        if (poolData) {
-            poolData.pool = [];
+    clear(type: string): void {
+        const pool = this.pools.get(type);
+        if (pool) {
+            pool.clear();
         }
     }
 
     /**
      * 销毁整个对象池系统
      */
-    public destroy(): void {
+    destroy(): void {
         this.pools.clear();
+    }
+
+    /**
+     * 获取指定类型对象池的大小
+     * @param type 对象类型标识
+     * @returns 对象池的大小
+     */
+    size(type: string): number {
+        const pool = this.pools.get(type);
+        if (!pool) {
+            throw new Error(`Pool for type "${type}" not found.`);
+        }
+        return pool.size();
     }
 }
 
