@@ -6,8 +6,8 @@ import { MyCameraControls } from '@/MyCameraControls';
 // import { HexCellInteractEffectHandler } from './HexCellInteractEffectHandler';
 import { Config } from '@/config';
 import { HexCellRectSelectView } from './HexCellRectSelectView';
-import { HoverEffectHandler } from './HoverEffectHandler';
-import { SelectEffectHandler } from './SelectEffectHandler';
+import { HexCellHoverEffectHandler } from './HexCellHoverEffectHandler';
+import { HexCellSelectEffectHandler } from './HexCellSelectEffectHandler';
 
 export class HexGridInteractSystem {
     private raycaster: THREE.Raycaster = new THREE.Raycaster(); // 光线投射器
@@ -21,8 +21,8 @@ export class HexGridInteractSystem {
     private eventManager: EventManager;
 
     // private interactEffectHandler: HexCellInteractEffectHandler;
-    private hoverEffectHandler: HoverEffectHandler;
-    private selectEffectHandler: SelectEffectHandler;
+    private hoverEffectHandler: HexCellHoverEffectHandler;
+    private selectEffectHandler: HexCellSelectEffectHandler;
     private rectSelectView: HexCellRectSelectView;
 
     constructor(
@@ -33,8 +33,8 @@ export class HexGridInteractSystem {
     ) {
         this.eventManager = eventManager;
         // this.interactEffectHandler = new HexCellInteractEffectHandler(); // 初始化 hoverEffectManager
-        this.hoverEffectHandler = new HoverEffectHandler();
-        this.selectEffectHandler = new SelectEffectHandler();
+        this.hoverEffectHandler = new HexCellHoverEffectHandler();
+        this.selectEffectHandler = new HexCellSelectEffectHandler();
         this.rectSelectView = new HexCellRectSelectView(scene);
         this.init();
     }

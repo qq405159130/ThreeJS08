@@ -3,7 +3,7 @@ import { PoolSystem } from '@/base/PoolSystem';
 import { Config } from '@/config';
 import { HexCellHoverEffect } from './HexCellHoverEffect';
 
-export class HoverEffectHandler {
+export class HexCellHoverEffectHandler {
     private hoverEffects: Map<string, HexCellHoverEffect> = new Map();
     private pools: PoolSystem = new PoolSystem();
 

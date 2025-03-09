@@ -3,7 +3,7 @@ import { PoolSystem } from '@/base/PoolSystem';
 import { Config } from '@/config';
 import { HexCellSelectEffect } from './HexCellSelectEffect';
 
-export class SelectEffectHandler {
+export class HexCellSelectEffectHandler {
     private selectEffects: Map<string, HexCellSelectEffect> = new Map();
     private pools: PoolSystem = new PoolSystem();
 
