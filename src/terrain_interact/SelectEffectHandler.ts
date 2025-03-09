@@ -1,14 +1,14 @@
 import * as THREE from 'three';
 import { PoolSystem } from '@/base/PoolSystem';
 import { Config } from '@/config';
-import { HexCellInteractEffect } from './HexCellInteractEffect';
+import { HexCellSelectEffect } from './HexCellSelectEffect';
 
 export class SelectEffectHandler {
-    private selectEffects: Map<string, HexCellInteractEffect> = new Map();
+    private selectEffects: Map<string, HexCellSelectEffect> = new Map();
     private pools: PoolSystem = new PoolSystem();
 
     constructor() {
-        this.pools.register("selectEffect", () => new HexCellInteractEffect(), (o) => o.reset());
+        this.pools.register("selectEffect", () => new HexCellSelectEffect(), (o) => o.reset());
     }
 
     public dispose(): void {
@@ -41,21 +41,23 @@ export class SelectEffectHandler {
         return this.selectEffects.has(mesh.userData.id);
     }
 
-    private getSelectEffect(mesh: THREE.Mesh): HexCellInteractEffect {
+    private getSelectEffect(mesh: THREE.Mesh): HexCellSelectEffect {
         const id = mesh.userData.id;
         let selectEffect = this.selectEffects.get(id);
         if (!selectEffect) {
-            selectEffect = this.pools.acquire<HexCellInteractEffect>("selectEffect");
+            selectEffect = this.pools.acquire<HexCellSelectEffect>("selectEffect");
             selectEffect.init(mesh);
             this.selectEffects.set(id, selectEffect);
         }
         return selectEffect;
     }
 
-    private restoreEffect(effect: HexCellInteractEffect): void {
-        if (!Config.isUsePool) return;
+    private restoreEffect(effect: HexCellSelectEffect): void {
+        if (!Config.isUsePool)
+            return;
         const id = effect.useID;
-        if (!this.selectEffects.has(id)) return;
+        if (!this.selectEffects.has(id))
+            return;
         this.selectEffects.delete(id);
         this.pools.release("selectEffect", effect);
     }

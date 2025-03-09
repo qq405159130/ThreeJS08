@@ -1,14 +1,14 @@
 import * as THREE from 'three';
 import { PoolSystem } from '@/base/PoolSystem';
 import { Config } from '@/config';
-import { HexCellInteractEffect } from './HexCellInteractEffect';
+import { HexCellHoverEffect } from './HexCellHoverEffect';
 
 export class HoverEffectHandler {
-    private hoverEffects: Map<string, HexCellInteractEffect> = new Map();
+    private hoverEffects: Map<string, HexCellHoverEffect> = new Map();
     private pools: PoolSystem = new PoolSystem();
 
     constructor() {
-        this.pools.register("hoverEffect", () => new HexCellInteractEffect(), (o) => o.reset());
+        this.pools.register("hoverEffect", () => new HexCellHoverEffect(), (o) => o.reset());
     }
 
     public dispose(): void {
@@ -41,21 +41,23 @@ export class HoverEffectHandler {
         return this.hoverEffects.has(mesh.userData.id);
     }
 
-    private getHoverEffect(mesh: THREE.Mesh): HexCellInteractEffect {
+    private getHoverEffect(mesh: THREE.Mesh): HexCellHoverEffect {
         const id = mesh.userData.id;
         let hoverEffect = this.hoverEffects.get(id);
         if (!hoverEffect) {
-            hoverEffect = this.pools.acquire<HexCellInteractEffect>("hoverEffect");
+            hoverEffect = this.pools.acquire<HexCellHoverEffect>("hoverEffect");
             hoverEffect.init(mesh);
             this.hoverEffects.set(id, hoverEffect);
         }
         return hoverEffect;
     }
 
-    private restoreEffect(effect: HexCellInteractEffect): void {
-        if (!Config.isUsePool) return;
+    private restoreEffect(effect: HexCellHoverEffect): void {
+        if (!Config.isUsePool)
+            return;
         const id = effect.useID;
-        if (!this.hoverEffects.has(id)) return;
+        if (!this.hoverEffects.has(id))
+            return;
         this.hoverEffects.delete(id);
         this.pools.release("hoverEffect", effect);
     }
