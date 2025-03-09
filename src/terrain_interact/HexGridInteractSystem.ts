@@ -3,9 +3,11 @@ import { HexCellView } from './HexCellView';
 import { EventManager } from '../utils/EventManager';
 import { ServiceManager } from '@/utils/ServiceManager';
 import { MyCameraControls } from '@/MyCameraControls';
-import { HexCellInteractEffectHandler } from './HexCellInteractEffectHandler';
+// import { HexCellInteractEffectHandler } from './HexCellInteractEffectHandler';
 import { Config } from '@/config';
 import { HexCellRectSelectView } from './HexCellRectSelectView';
+import { HoverEffectHandler } from './HoverEffectHandler';
+import { SelectEffectHandler } from './SelectEffectHandler';
 
 export class HexGridInteractSystem {
     private raycaster: THREE.Raycaster = new THREE.Raycaster(); // 光线投射器
@@ -18,7 +20,9 @@ export class HexGridInteractSystem {
     private dragEnd: THREE.Vector2 = new THREE.Vector2(); // 拖动结束位置
     private eventManager: EventManager;
 
-    private interactEffectHandler: HexCellInteractEffectHandler;
+    // private interactEffectHandler: HexCellInteractEffectHandler;
+    private hoverEffectHandler: HoverEffectHandler;
+    private selectEffectHandler: SelectEffectHandler;
     private rectSelectView: HexCellRectSelectView;
 
     constructor(
@@ -28,15 +32,27 @@ export class HexGridInteractSystem {
         eventManager: EventManager
     ) {
         this.eventManager = eventManager;
-        this.interactEffectHandler = new HexCellInteractEffectHandler(); // 初始化 hoverEffectManager
+        // this.interactEffectHandler = new HexCellInteractEffectHandler(); // 初始化 hoverEffectManager
+        this.hoverEffectHandler = new HoverEffectHandler();
+        this.selectEffectHandler = new SelectEffectHandler();
         this.rectSelectView = new HexCellRectSelectView(scene);
         this.init();
     }
 
     public dispose(): void {
-        this.interactEffectHandler.dispose();
-
+        // this.interactEffectHandler.dispose();
+        this.hoverEffectHandler.dispose();
+        this.selectEffectHandler.dispose();
         this.rectSelectView.dispose();
+    }
+
+    // 更新系统
+    public update(deltaTime: number): void {
+        // 可以在这里添加每帧更新的逻辑
+
+        // this.interactEffectHandler.update(deltaTime);
+        this.hoverEffectHandler.update(deltaTime);
+        this.selectEffectHandler.update(deltaTime);
     }
 
     // 初始化
@@ -236,48 +252,42 @@ export class HexGridInteractSystem {
     private handleCellHoverStart(cell: HexCellView): void {
         // cell.onHoverStart(); 
         Config.isLogInterative && console.warn(`Cell hovered: (${cell.q}, ${cell.r})`);
-        this.interactEffectHandler.showHoverEffect([cell.mesh]);
+        this.hoverEffectHandler.showHoverEffect([cell.mesh]);
     }
 
     // 处理悬停结束事件
     private handleCellHoverEnd(cell: HexCellView): void {
         // cell.onHoverEnd(); 
         Config.isLogInterative && console.warn(`Cell hover ended: (${cell.q}, ${cell.r})`);
-        this.interactEffectHandler.hideHoverEffect([cell.mesh]);
+        this.hoverEffectHandler.hideHoverEffect([cell.mesh]);
     }
 
     // 处理选中事件
     private handleCellSelect(cells: HexCellView[]): void {
         // cell.onSelect();
         Config.isLogInterative && console.warn("handle CellSelect ~~~~~");
-        this.interactEffectHandler.showSelectEffect(cells.map(cell => cell.mesh));
+        this.selectEffectHandler.showSelectEffect(cells.map(cell => cell.mesh));
     }
 
     // 处理取消操作事件
     private handleCellDeselect(cells: HexCellView[]): void {
         // cell.cancelAction();
         Config.isLogInterative && console.warn("handle CellDeselect ~~~~~");
-        this.interactEffectHandler.hideSelectEffect(cells.map(cell => cell.mesh));
+        this.selectEffectHandler.hideSelectEffect(cells.map(cell => cell.mesh));
     }
 
-    // 处理框选悬停事件
-    private handleCellSelectHover(cells: HexCellView[]): void {
-        // cell.onSelectHoverStart();
-        Config.isLogInterative && console.warn("handle CellSelectHover ~~~~~");
-        this.interactEffectHandler.showHoverEffect(cells.map(cell => cell.mesh));
-    }
+    // // 处理框选悬停事件
+    // private handleCellSelectHover(cells: HexCellView[]): void {
+    //     // cell.onSelectHoverStart();
+    //     Config.isLogInterative && console.warn("handle CellSelectHover ~~~~~");
+    //     this.interactEffectHandler.showHoverEffect(cells.map(cell => cell.mesh));
+    // }
 
-    // 处理框选悬停结束事件
-    private handleCellSelectHoverEnd(cells: HexCellView[]): void {
-        // cell.onHoverEnd(); 
-        Config.isLogInterative && console.warn("handle CellSelectHoverEnd ~~~~~");
-        this.interactEffectHandler.hideHoverEffect(cells.map(cell => cell.mesh));
-    }
+    // // 处理框选悬停结束事件
+    // private handleCellSelectHoverEnd(cells: HexCellView[]): void {
+    //     // cell.onHoverEnd(); 
+    //     Config.isLogInterative && console.warn("handle CellSelectHoverEnd ~~~~~");
+    //     this.interactEffectHandler.hideHoverEffect(cells.map(cell => cell.mesh));
+    // }
 
-    // 更新系统
-    public update(deltaTime: number): void {
-        // 可以在这里添加每帧更新的逻辑
-
-        this.interactEffectHandler.update(deltaTime);
-    }
 }
