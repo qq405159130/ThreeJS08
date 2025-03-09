@@ -8,6 +8,8 @@ import { Config } from '@/config';
 import { HexCellRectSelectView } from './HexCellRectSelectView';
 import { HexCellHoverEffectHandler } from './HexCellHoverEffectHandler';
 import { HexCellSelectEffectHandler } from './HexCellSelectEffectHandler';
+import { PosUtils } from '@/utils/PosUtils';
+
 
 export class HexGridInteractSystem {
     private raycaster: THREE.Raycaster = new THREE.Raycaster(); // 光线投射器
@@ -24,6 +26,13 @@ export class HexGridInteractSystem {
     private hoverEffectHandler: HexCellHoverEffectHandler;
     private selectEffectHandler: HexCellSelectEffectHandler;
     private rectSelectView: HexCellRectSelectView;
+
+    /** 框选模式枚举 */
+    private static SELECTION_MODE = {
+        SCREEN: 'screen', // 屏幕范围框选
+        GROUND: 'ground', // 地面矩形框选
+    };
+    private selectionMode: string = HexGridInteractSystem.SELECTION_MODE.GROUND; // 默认使用地面矩形框选
 
     constructor(
         private scene: THREE.Scene,
@@ -115,7 +124,7 @@ export class HexGridInteractSystem {
             const views = Array.from(this.cellViews.values());
 
             // 找到框选范围内的单元格
-            const newHoveredCells = this.findHexCellByScreenRect(views, this.dragStart, this.dragEnd);
+            const newHoveredCells = this.findHexCellBySelection(views, this.dragStart, this.dragEnd);
 
             // 处理悬停状态
             this.handleMultipleCellHover(newHoveredCells);
@@ -125,7 +134,7 @@ export class HexGridInteractSystem {
             const intersects = this.raycaster.intersectObjects(views.map(cell => cell.mesh));
             if (intersects.length > 0) {
                 const intersectedCell = views.find(cell => cell.mesh === intersects[0].object);
-                Config.isLogInterative && console.log(`hover   views:${views.length}  intersects:${intersects.length}   ${intersectedCell != null}  ${intersectedCell !== this.hoveredCell}`);
+                Config.isLogInterative && console.log(`hover   views:${views.length}  intersects:${intersects.length}   ${intersectedCell != null}`);
                 if (intersectedCell && !this.hoveredCells.has(intersectedCell)) {
                     // 如果当前单元格不在悬停集合中，则处理悬停
                     this.handleCellHoverStart(intersectedCell);
@@ -228,32 +237,96 @@ export class HexGridInteractSystem {
         }
     }
 
-    /** 用屏幕矩形框住的 */
+    /**
+     * 设置框选模式
+     * @param mode 框选模式（SCREEN 或 GROUND）
+     */
+    public setSelectionMode(mode: string): void {
+        if (mode === HexGridInteractSystem.SELECTION_MODE.SCREEN || mode === HexGridInteractSystem.SELECTION_MODE.GROUND) {
+            this.selectionMode = mode;
+        } else {
+            console.warn('Invalid selection mode. Supported modes are "screen" and "ground".');
+        }
+    }
+
+    /**
+     * 根据框选模式找到框选范围内的单元格
+     * @param cellViews 所有单元格视图
+     * @param start 框选起点
+     * @param end 框选终点
+     * @returns 框选范围内的单元格集合
+     */
+    private findHexCellBySelection(cellViews: HexCellView[], start: THREE.Vector2, end: THREE.Vector2): Set<HexCellView> {
+        if (this.selectionMode === HexGridInteractSystem.SELECTION_MODE.SCREEN) {
+            return this.findHexCellByScreenRect(cellViews, start, end);
+        } else {
+            return this.findHexCellByGroundRect(cellViews, start, end);
+        }
+    }
+
+    /**
+     * 基于屏幕范围的框选
+     * @param cellViews 所有单元格视图
+     * @param sp 框选起点（屏幕坐标）
+     * @param ep 框选终点（屏幕坐标）
+     * @returns 框选范围内的单元格集合
+     */
     private findHexCellByScreenRect(cellViews: HexCellView[], sp: THREE.Vector2, ep: THREE.Vector2): Set<HexCellView> {
         const findCells = new Set<HexCellView>();
         const minX = Math.min(sp.x, ep.x);
         const maxX = Math.max(sp.x, ep.x);
         const minY = Math.min(sp.y, ep.y);
         const maxY = Math.max(sp.y, ep.y);
+
         cellViews.forEach(cell => {
-            const screenPosition = new THREE.Vector3();
-            cell.mesh.getWorldPosition(screenPosition);
-            screenPosition.project(this.camera);
-
-            const x = (screenPosition.x + 1) * window.innerWidth / 2;
-            const y = (-screenPosition.y + 1) * window.innerHeight / 2;
-
-            if (x >= minX && x <= maxX && y >= minY && y <= maxY) {
+            const screenPosition = PosUtils.getScreenPos(cell.mesh.position, this.camera);
+            if (
+                screenPosition.x >= minX &&
+                screenPosition.x <= maxX &&
+                screenPosition.y >= minY &&
+                screenPosition.y <= maxY
+            ) {
                 findCells.add(cell);
             }
         });
+
         return findCells;
     }
 
-    /** 用地面矩形框住的 */
-    private findHexCellByGroundRect(cellViews: HexCellView[], sp: THREE.Vector3, ep: THREE.Vector3): Set<HexCellView> {
-        return new Set();//TODO
+    /**
+     * 基于地面矩形的框选
+     * @param cellViews 所有单元格视图
+     * @param sp 框选起点（屏幕坐标）
+     * @param ep 框选终点（屏幕坐标）
+     * @returns 框选范围内的单元格集合
+     */
+    private findHexCellByGroundRect(cellViews: HexCellView[], sp: THREE.Vector2, ep: THREE.Vector2): Set<HexCellView> {
+        const findCells = new Set<HexCellView>();
+
+        // 将屏幕坐标转换为世界坐标（基于地面平面）
+        const startWorld = PosUtils.getWorldPos(sp, this.camera);
+        const endWorld = PosUtils.getWorldPos(ep, this.camera);
+
+        const minX = Math.min(startWorld.x, endWorld.x);
+        const maxX = Math.max(startWorld.x, endWorld.x);
+        const minZ = Math.min(startWorld.z, endWorld.z);
+        const maxZ = Math.max(startWorld.z, endWorld.z);
+
+        cellViews.forEach(cell => {
+            const cellPos = cell.mesh.position;
+            if (
+                cellPos.x >= minX &&
+                cellPos.x <= maxX &&
+                cellPos.z >= minZ &&
+                cellPos.z <= maxZ
+            ) {
+                findCells.add(cell);
+            }
+        });
+
+        return findCells;
     }
+
 
     // 处理框选逻辑
     private handleBoxSelect(event: MouseEvent): void {
