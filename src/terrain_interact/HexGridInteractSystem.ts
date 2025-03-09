@@ -12,7 +12,7 @@ import { HexCellSelectEffectHandler } from './HexCellSelectEffectHandler';
 export class HexGridInteractSystem {
     private raycaster: THREE.Raycaster = new THREE.Raycaster(); // 光线投射器
     private mouse: THREE.Vector2 = new THREE.Vector2(); // 鼠标位置
-    private hoveredCell: HexCellView | null = null; // 当前悬停的单元格
+    private hoveredCells: Set<HexCellView> = new Set(); // 当前悬停的单元格集合
     private selectedCells: Set<HexCellView> = new Set(); // 当前选中的单元格
     private isDragging: boolean = false; // 是否正在拖动
     private isDragDone: boolean = true;
@@ -92,33 +92,13 @@ export class HexGridInteractSystem {
         // 将鼠标位置归一化为设备坐标（-1到+1）
         this.mouse.x = MyCameraControls.isPointerLocked ? 0 : (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = MyCameraControls.isPointerLocked ? 0 : -(event.clientY / window.innerHeight) * 2 + 1;
+
         // 更新光线投射器
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
-        // 检测与网格的交互
-        const views = Array.from(this.cellViews.values());
-        const intersects = this.raycaster.intersectObjects(views.map(cell => cell.mesh));
-        if (intersects.length > 0) {
-            const intersectedCell = views.find(cell => cell.mesh === intersects[0].object);
-            Config.isLogInterative && console.log(`hover   views:${views.length}  intersects:${intersects.length}   ${intersectedCell != null}  ${intersectedCell !== this.hoveredCell}`
-                // + `     id1: ${intersects[0]?.object?.userData?.id},   id2: ${intersects[1]?.object?.userData?.id}`
-            );
-            if (intersectedCell && intersectedCell !== this.hoveredCell) {
-                if (this.hoveredCell) {
-                    this.handleCellHoverEnd(this.hoveredCell);// 结束上一个悬停
-                    this.hoveredCell = null;
-                }
-                this.handleCellHoverStart(intersectedCell);// 开始新的悬停
-                this.hoveredCell = intersectedCell;
-            }
-        } else if (this.hoveredCell) {//处理光标在地图外时，取消hover
-            this.handleCellHoverEnd(this.hoveredCell);
-            this.hoveredCell = null;
-        }
-        // 矩形框选时，更新框选矩形面
+        // 如果正在拖动，禁用单个单元格的悬停判断
         if (this.isDragging) {
-            // console.warn(`onMouseMove  (${event.clientX}, ${event.clientY})  (${event.offsetX}, ${event.offsetY}) `);//奇怪，这些坐标都是不变的。
-            // console.warn(`onMouseMove   (${event.movementX}, ${event.movementY})    `);//这些坐标有变化，但数值变化很小，大约只是-10~10之间，不知道意味着什么。
+            // 更新拖动结束位置
             if (MyCameraControls.isPointerLocked) {
                 // 在 Pointer Lock 模式下使用相对移动量
                 this.dragEnd.x += event.movementX;
@@ -127,8 +107,59 @@ export class HexGridInteractSystem {
                 // 在非 Pointer Lock 模式下使用绝对坐标
                 this.dragEnd.set(event.clientX, event.clientY);
             }
+
+            // 更新框选矩形面
             this.rectSelectView.updateSelectionRect(this.dragStart, this.dragEnd, this.camera);
+
+            // 获取所有单元格视图
+            const views = Array.from(this.cellViews.values());
+
+            // 找到框选范围内的单元格
+            const newHoveredCells = this.findHexCellByScreenRect(views, this.dragStart, this.dragEnd);
+
+            // 处理悬停状态
+            this.handleMultipleCellHover(newHoveredCells);
+        } else {
+            // 正常处理单个单元格的悬停
+            const views = Array.from(this.cellViews.values());
+            const intersects = this.raycaster.intersectObjects(views.map(cell => cell.mesh));
+            if (intersects.length > 0) {
+                const intersectedCell = views.find(cell => cell.mesh === intersects[0].object);
+                Config.isLogInterative && console.log(`hover   views:${views.length}  intersects:${intersects.length}   ${intersectedCell != null}  ${intersectedCell !== this.hoveredCell}`);
+                if (intersectedCell && !this.hoveredCells.has(intersectedCell)) {
+                    // 如果当前单元格不在悬停集合中，则处理悬停
+                    this.handleCellHoverStart(intersectedCell);
+                    this.hoveredCells.add(intersectedCell);
+                }
+            } else if (this.hoveredCells.size > 0) {
+                // 处理光标在地图外时，取消所有悬停
+                this.hoveredCells.forEach(cell => this.handleCellHoverEnd(cell));
+                this.hoveredCells.clear();
+            }
         }
+    }
+
+    // 处理多个单元格的悬停状态
+    private handleMultipleCellHover(newHoveredCells: Set<HexCellView>): void {
+        // 找出需要取消悬停的单元格
+        const cellsToUnhover = new Set<HexCellView>(this.hoveredCells);
+        for (const cell of newHoveredCells) {
+            cellsToUnhover.delete(cell);
+        }
+
+        // 取消不再悬停的单元格
+        cellsToUnhover.forEach(cell => {
+            this.handleCellHoverEnd(cell);
+            this.hoveredCells.delete(cell);
+        });
+
+        // 处理新悬停的单元格
+        newHoveredCells.forEach(cell => {
+            if (!this.hoveredCells.has(cell)) {
+                this.handleCellHoverStart(cell);
+                this.hoveredCells.add(cell);
+            }
+        });
     }
 
     // 处理鼠标点击事件
