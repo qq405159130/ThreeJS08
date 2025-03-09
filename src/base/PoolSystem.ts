@@ -6,13 +6,15 @@ type Constructor<T> = new (...args: any[]) => T;
 type ResetFn<T> = (obj: T) => void;
 type CreateFn<T> = () => T;
 
-class Pool<T> {
+export class Pool<T> {
     private pool: T[];
+    private releasedSet: Set<T>; // 用于记录已经归还的对象
     private createFn: CreateFn<T>;
     private resetFn?: ResetFn<T>;
 
     constructor(createFn: CreateFn<T>, resetFn?: ResetFn<T>) {
         this.pool = [];
+        this.releasedSet = new Set();
         this.createFn = createFn;
         this.resetFn = resetFn;
     }
@@ -23,7 +25,9 @@ class Pool<T> {
      */
     acquire(): T {
         if (this.pool.length > 0) {
-            return this.pool.pop()!;
+            const obj = this.pool.pop()!;
+            this.releasedSet.delete(obj); // 从已归还集合中移除
+            return obj;
         }
         return this.createFn();
     }
@@ -33,10 +37,17 @@ class Pool<T> {
      * @param obj 对象实例
      */
     release(obj: T): void {
+        if (this.releasedSet.has(obj)) {
+            console.warn('Object already released, skipping.'); // 避免重复归还
+            return;
+        }
+
         if (this.resetFn) {
             this.resetFn(obj);
         }
+
         this.pool.push(obj);
+        this.releasedSet.add(obj); // 记录已归还的对象
     }
 
     /**
@@ -44,6 +55,7 @@ class Pool<T> {
      */
     clear(): void {
         this.pool = [];
+        this.releasedSet.clear();
     }
 
     /**
@@ -56,8 +68,7 @@ class Pool<T> {
 }
 
 
-
-class PoolSystem {
+export class PoolSystem {
     private pools: Map<string, Pool<any>>;
 
     constructor() {

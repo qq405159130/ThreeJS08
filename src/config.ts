@@ -4,7 +4,8 @@ export const Config = {
     isDebugTool: false,//
     isCreateTempCubes: false,//
 
-    
+
     isSaveMap: false,//是否保存地图
     
+    isUsePool: true,
 };

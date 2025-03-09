@@ -82,12 +82,15 @@ export class HexGridInteractSystem {
         // 检测与网格的交互
         const views = Array.from(this.cellViews.values());
         const intersects = this.raycaster.intersectObjects(views.map(cell => cell.mesh));
-        // Config.isLogInterative && console.warn(`hover     views:${views.length}       intersects:${intersects.length}    this.scene.children.length: ${this.scene.children.length}`);
         if (intersects.length > 0) {
             const intersectedCell = views.find(cell => cell.mesh === intersects[0].object);
+            Config.isLogInterative && console.log(`hover   views:${views.length}  intersects:${intersects.length}   ${intersectedCell != null}  ${intersectedCell !== this.hoveredCell}`
+                // + `     id1: ${intersects[0]?.object?.userData?.id},   id2: ${intersects[1]?.object?.userData?.id}`
+            );
             if (intersectedCell && intersectedCell !== this.hoveredCell) {
                 if (this.hoveredCell) {
                     this.handleCellHoverEnd(this.hoveredCell);// 结束上一个悬停
+                    this.hoveredCell = null;
                 }
                 this.handleCellHoverStart(intersectedCell);// 开始新的悬停
                 this.hoveredCell = intersectedCell;
@@ -96,7 +99,7 @@ export class HexGridInteractSystem {
             this.handleCellHoverEnd(this.hoveredCell);
             this.hoveredCell = null;
         }
-        // 更新框选矩形面
+        // 矩形框选时，更新框选矩形面
         if (this.isDragging) {
             // console.warn(`onMouseMove  (${event.clientX}, ${event.clientY})  (${event.offsetX}, ${event.offsetY}) `);//奇怪，这些坐标都是不变的。
             // console.warn(`onMouseMove   (${event.movementX}, ${event.movementY})    `);//这些坐标有变化，但数值变化很小，大约只是-10~10之间，不知道意味着什么。

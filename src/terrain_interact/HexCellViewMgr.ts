@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { HexCellView } from './HexCellView';
-import { EventManager } from '../utils/EventManager';
 import { HexCellData } from '@/terrain/types';
 import { MapViewUtils } from '../terrain_view/MapViewUtils';
 import { eTerrain } from '@/terrain/enums';
 import { ServiceManager } from '@/utils/ServiceManager';
+import { IDUtils } from '@/utils/IDUtils';
 
 
 export class HexCellViewMgr {
@@ -41,7 +41,7 @@ export class HexCellViewMgr {
     // 添加或更新单元格视图
     public addOrUpdateCellView(q: number, r: number, cellData: HexCellData): void {
         const eventManager = ServiceManager.getInstance().getEventManager();
-        const key = `${q},${r}`;
+        const key = IDUtils.getID(q, r);
         let cellView = this.cellViews.get(key);
         if (!cellView) {
             const mesh = this.createHexMesh(q, r, cellData.terrainType);
@@ -59,7 +59,7 @@ export class HexCellViewMgr {
 
     // 获取单元格视图
     public getCellView(q: number, r: number): HexCellView | undefined {
-        return this.cellViews.get(`${q},${r}`);
+        return this.cellViews.get(IDUtils.getID(q, r));
     }
 
     // 获取所有单元格视图

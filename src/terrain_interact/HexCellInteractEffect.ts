@@ -19,8 +19,15 @@ export class HexCellInteractEffect {
     private isParticleActive: boolean = false; // 粒子效果是否激活
     private readonly particleCount: number = 20;
 
-    constructor() {
+    private static readonly HOVER_SCALE: number = 0.8;
+    private static readonly SELECT_SCALE: number = 0.6;
 
+    private static COUNT: number = 0;
+
+    public useID: string = "";
+
+    constructor() {
+        console.warn(`HexCellInteractEffect constructor ${HexCellInteractEffect.COUNT++}`);
     }
 
     /**
@@ -60,6 +67,15 @@ export class HexCellInteractEffect {
         this._createSelectBorder();
         this._createSelectOverlay();
         this._createParticles();
+    }
+
+    public reset(): void {
+        this.isSelected = false;
+        this.isParticleActive = false;
+        this.time = 0;
+        this.particleLifetime = 0;
+        this.hideHover();
+        this.hideSelect();
     }
 
     public update(deltaTime: number): void {
@@ -104,7 +120,7 @@ export class HexCellInteractEffect {
 
         if (this.overlay) this.overlay.visible = true;
         if (this.border) this.border.visible = true;
-        this.mesh.scale.set(1.1, 1.1, 1.1); // 放大 10%
+        this.mesh.scale.set(HexCellInteractEffect.HOVER_SCALE, HexCellInteractEffect.HOVER_SCALE, HexCellInteractEffect.HOVER_SCALE);
     }
 
     public hideHover(): void {
@@ -136,7 +152,7 @@ export class HexCellInteractEffect {
                 this.particleLifetime = 0; // 重置生命周期
             }
         }
-        this.mesh.scale.set(1.2, 1.2, 1.2); // 放大 20%
+        this.mesh.scale.set(HexCellInteractEffect.SELECT_SCALE, HexCellInteractEffect.SELECT_SCALE, HexCellInteractEffect.SELECT_SCALE);
     }
 
     public hideSelect(): void {
@@ -173,6 +189,7 @@ export class HexCellInteractEffect {
             this.mesh.add(this.border);
         }
         else {
+            this.mesh.add(this.border);
             this.border.position.copy(this.mesh.position);
         }
     }
@@ -197,6 +214,7 @@ export class HexCellInteractEffect {
 
         }
         else {
+            this.mesh.add(this.overlay);
             this.overlay.position.copy(this.mesh.position);
         }
     }
@@ -220,6 +238,7 @@ export class HexCellInteractEffect {
             this.mesh.add(this.selectBorder);
         }
         else {
+            this.mesh.add(this.selectBorder);
             this.selectBorder.position.copy(this.mesh.position);
         }
     }
@@ -243,6 +262,7 @@ export class HexCellInteractEffect {
             this.mesh.add(this.selectOverlay);
         }
         else {
+            this.mesh.add(this.selectOverlay);
             this.selectOverlay.position.copy(this.mesh.position);
         }
     }
@@ -250,7 +270,7 @@ export class HexCellInteractEffect {
     private _createParticles(): void {
         if (!this.mesh)
             return;
-        if (!this.particleGeometry) {
+        if (!this.particles) {
             const positions = new Float32Array(this.particleCount * 3);
             for (let i = 0; i < this.particleCount; i++) {
                 const theta = Math.random() * Math.PI * 2;
@@ -278,7 +298,7 @@ export class HexCellInteractEffect {
             this.mesh.add(this.particles);
         }
         else {
-
+            this.mesh.add(this.particles);
         }
     }
 

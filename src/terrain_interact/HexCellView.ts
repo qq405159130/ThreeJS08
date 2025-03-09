@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { EventManager } from '../utils/EventManager';
 import { HexCellData } from '../terrain/types';
+import { IDUtils } from '@/utils/IDUtils';
 
 export class HexCellView {
     public mesh: THREE.Mesh; // 六边形网格的3D对象
-    public isHovered: boolean = false; // 是否悬停
-    public isSelected: boolean = false; // 是否选中
+    // public isHovered: boolean = false; // 是否悬停
+    // public isSelected: boolean = false; // 是否选中
 
     private eventManager?: EventManager;
 
@@ -13,6 +14,7 @@ export class HexCellView {
 
     constructor(public q: number, public r: number, mesh: THREE.Mesh) {
         this.mesh = mesh;
+        this.mesh.userData = { id: IDUtils.getID(q, r) };
     }
 
     public init(eventManager: EventManager) {

@@ -33,7 +33,7 @@ export class MapGenerator {
 
         coordinates.forEach(({ q, r }) => {
             // const cell = new HexCell(q, r);
-            // this.cellDatas.set(`${q},${r}`, cell);
+            // this.cellDatas.set(HexCellMgr.getID(q, r), cell);
             const cell = ServiceManager.getInstance().getHexCellMgr().addOrUpdateCell(q, r);
         });
     }

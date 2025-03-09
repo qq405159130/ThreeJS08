@@ -2,6 +2,7 @@ import { Hex } from 'honeycomb-grid';
 import { HexCell } from './HexCell';
 import { HexCellData } from './types';
 import { eTerrain } from './enums';
+import { IDUtils } from '@/utils/IDUtils';
 
 export class HexCellMgr {
     private ID: number = 0;
@@ -11,7 +12,7 @@ export class HexCellMgr {
 
     // 添加或更新单元格
     public addOrUpdateCell(q: number, r: number, data?: HexCellData): HexCell {
-        const key = `${q},${r}`;
+        const key = IDUtils.getID(q, r);
         let cell = this.cells.get(key);
         if (!cell) {
             cell = new HexCell(q, r);
@@ -33,7 +34,7 @@ export class HexCellMgr {
 
     // 获取单元格
     public getCell(q: number, r: number): HexCell | undefined {
-        return this.cells.get(`${q},${r}`);
+        return this.cells.get(IDUtils.getID(q, r));
     }
 
     // 获取所有单元格
